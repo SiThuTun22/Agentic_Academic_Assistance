@@ -1,8 +1,8 @@
 # Agentic Academic Assistant (AAA)
 
-Minimal Litestar skeleton for a **Socratic tutoring platform** — interactive explanations for programming/CS topics, with a three-column workspace (chat history, question reader, tutor chat).
+Litestar backend + React UI (`aaa-ui/`) for a **Socratic tutoring platform** — interactive explanations for programming/CS topics, with a three-column workspace (chat history, question reader, tutor chat).
 
-Backend foundation only: JWT auth, chat sessions, submissions, and message stubs. No LLM or frontend yet.
+JWT auth, chat sessions, submissions, and message stubs are implemented. Keyword generation and Socratic tutor replies are not yet implemented.
 
 ## Setup
 
@@ -47,17 +47,64 @@ Backend foundation only: JWT auth, chat sessions, submissions, and message stubs
    uv run main.py
    ```
 
-Scalar API UI: http://localhost:8000/scalar (public, no token)
+5. Start the UI (separate terminal):
 
-OpenAPI schema JSON: http://localhost:8000/ or http://localhost:8000/openapi.json (public; Scalar fetches `/openapi.json` automatically)
+   ```bash
+   cd aaa-ui
+   npm install
+   npm run dev
+   ```
 
-## Auth (Scalar testing)
+   Open http://localhost:5173.
 
-1. Open Scalar at `/scalar` — no login required to view the docs UI
-2. `POST /api/auth/register` — create an account (response has user fields only, no token)
-3. `POST /api/auth/login` — copy `access_token` from the response
-4. Click **Authorize** in Scalar and enter: `Bearer <your-token>`
-5. Create a chat session, submit a question, list/post messages
+## URLs
+
+| URL | Description |
+|-----|-------------|
+| http://localhost:8000/scalar | Scalar API UI (public) |
+| http://localhost:8000/openapi.json | OpenAPI schema |
+| http://localhost:8000/health | Health check |
+| http://localhost:5173 | React UI (aaa-ui) |
+
+## Demo account (local dev)
+
+| Field | Value |
+|-------|-------|
+| Email | `demo@example.com` |
+| Password | `demo1234` |
+
+Create the demo user after a fresh database:
+
+```bash
+curl -X POST http://localhost:8000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@example.com","display_name":"Demo User","password":"demo1234"}'
+```
+
+PowerShell:
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8000/api/auth/register" -Method POST `
+  -ContentType "application/json" `
+  -Body '{"email":"demo@example.com","display_name":"Demo User","password":"demo1234"}'
+```
+
+Then sign in via the UI (http://localhost:5173) or `POST /api/auth/login` in Scalar.
+
+## Auth
+
+| Action | Where |
+|--------|-------|
+| Sign in / Register | UI at http://localhost:5173 |
+| API testing | Scalar at http://localhost:8000/scalar |
+| Sign out | UI workspace toolbar |
+
+## Environment variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `DATABASE_URL` | see `.env.example` | PostgreSQL async URL |
+| `JWT_SECRET` | `change-me-in-production` | JWT signing secret |
 
 ## Endpoints
 
@@ -71,9 +118,13 @@ OpenAPI schema JSON: http://localhost:8000/ or http://localhost:8000/openapi.jso
 - `POST /api/chat-sessions/{id}/submissions` — requires JWT (middle column input; returns stub `keywords: []`)
 - `GET/POST /api/chat-sessions/{id}/messages` — requires JWT (right column chat thread; user messages only for now)
 
-## Product flow (from `.cursorrules`)
+## Product flow
 
 1. **Setup** — tutor tone + avatar on chat session create
 2. **Submit** — question + optional reference text via submissions
 3. **Keywords** — stub empty list (future: interactive reader tokens)
 4. **Deep-dive chat** — messages with optional `keyword_context` (future: Socratic tutor replies in Myanmar)
+
+## UI documentation
+
+See [`aaa-ui/README.md`](aaa-ui/README.md) for frontend setup, auth flow, and workspace columns.

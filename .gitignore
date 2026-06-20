@@ -8,3 +8,5 @@ __pycache__/
 .ruff_cache/
 dist/
 build/
+aaa-ui/node_modules/
+aaa-ui/dist/
