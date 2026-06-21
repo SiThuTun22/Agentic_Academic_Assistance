@@ -6,19 +6,32 @@ JWT auth, chat sessions, submissions, and message stubs are implemented. Keyword
 
 ## Setup
 
-1. Copy env file and set your Postgres URL:
+1. Start Postgres in Docker (dev database on host port **5434**):
+
+   ```bash
+   docker compose up -d
+   docker compose ps   # optional: wait until db is healthy
+   ```
+
+   **Mac + pgAdmin:** Docker uses port **5434** so your existing Local Postgres on **5432** (e.g. pgAdmin `AAA`) is untouched.
+
+   **Linux server:** Run `docker compose up -d` on the same machine as `uv run main.py` so the app and DB share `localhost:5434`.
+
+   **Stop DB:** `docker compose down` (keeps data). **Reset dev data:** `docker compose down -v`, then `up -d` and run migrations again.
+
+2. Copy env file:
 
    ```bash
    cp .env.example .env
    ```
 
-2. Install dependencies:
+3. Install dependencies:
 
    ```bash
    uv sync --extra dev
    ```
 
-3. Run migrations:
+4. Run migrations:
 
    ```bash
    uv run alembic upgrade head
@@ -27,27 +40,27 @@ JWT auth, chat sessions, submissions, and message stubs are implemented. Keyword
    **Migration squash / reset:** If you see `Can't locate revision identified by '001_initial'`, your DB still points at the old paper schema. Reset the dev database, then migrate again:
 
    ```bash
-   # Option A: drop and recreate (adjust user/db to match your .env)
-   dropdb -h localhost -U postgres AAA
-   createdb -h localhost -U postgres AAA
+   # Option A: Docker volume reset (recommended)
+   docker compose down -v
+   docker compose up -d
    uv run alembic upgrade head
    ```
 
    ```bash
-   # Option B: wipe schema only (keeps the database)
-   psql "$DATABASE_URL" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+   # Option B: wipe schema only (keeps the database container/volume)
+   psql "postgresql://aaa:aaa@localhost:5434/aaa" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
    uv run alembic upgrade head
    ```
 
    For Option B, use a `psql`-compatible URL (replace `postgresql+asyncpg://` with `postgresql://`).
 
-4. Start the server:
+5. Start the server:
 
    ```bash
    uv run main.py
    ```
 
-5. Start the UI (separate terminal):
+6. Start the UI (separate terminal):
 
    ```bash
    cd aaa-ui
