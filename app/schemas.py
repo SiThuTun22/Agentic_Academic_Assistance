@@ -61,3 +61,28 @@ class ChatMessageRead(BaseModel):
     role: MessageRole
     content: str
     keyword_context: str | None
+
+class ChatMessageExchangeRead(BaseModel):
+    user_message: ChatMessageRead
+    assistant_message: ChatMessageRead
+
+class DocumentAnnotationRead(BaseModel):
+    term: str
+    definition: str
+    page: int
+    x: float
+    y: float
+    width: float
+    height: float
+
+class DocumentRead(BaseModel):
+    id: uuid.UUID
+    chat_session_id: uuid.UUID
+    filename: str
+    file_url: str
+    annotations: list[DocumentAnnotationRead]
+
+class DocumentUploadRead(BaseModel):
+    document: DocumentRead
+    user_message: ChatMessageRead
+    assistant_message: ChatMessageRead

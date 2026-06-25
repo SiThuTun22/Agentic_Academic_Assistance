@@ -4,11 +4,12 @@ import type { ChatMessageRead } from "../../lib/apiTypes";
 interface TutorChatPanelProps {
   sessionId: string | null;
   messages: ChatMessageRead[];
-  activeKeyword: string | null;
   isLoading: boolean;
   isSending: boolean;
+  isUploading: boolean;
   error: string | null;
   onSend: (content: string) => Promise<void>;
+  onUploadPdf: (file: File) => Promise<void>;
   onRetryMessages: () => void;
   className?: string;
 }
@@ -27,9 +28,6 @@ function TutorMessageBubble(props: { message: ChatMessageRead }) {
     >
       <div className="bubble-header">
         <span className="bubble-role">{isUser ? "You" : "Tutor"}</span>
-        {message.keyword_context !== null && (
-          <span className="keyword-context-tag">{message.keyword_context}</span>
-        )}
       </div>
       <div className="bubble-body">
         <p className="bubble-text">{message.content}</p>
@@ -41,6 +39,7 @@ function TutorMessageBubble(props: { message: ChatMessageRead }) {
 export function TutorChatPanel(props: TutorChatPanelProps) {
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (messagesEndRef.current !== null) {
@@ -67,7 +66,7 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       const trimmed = inputValue.trim();
-      if (trimmed.length > 0 && !props.isSending) {
+      if (trimmed.length > 0 && !props.isSending && !props.isUploading) {
         props
           .onSend(trimmed)
           .then(() => {
@@ -80,17 +79,34 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
     }
   }
 
+  async function handleFileChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ): Promise<void> {
+    const fileList = event.target.files;
+    if (fileList === null || fileList.length === 0) {
+      return;
+    }
+
+    const file = fileList[0];
+    event.target.value = "";
+
+    try {
+      await props.onUploadPdf(file);
+    } catch {
+      // Parent sets error state.
+    }
+  }
+
   const columnClass = props.className
     ? `workspace-column tutor-chat-panel ${props.className}`
     : "workspace-column tutor-chat-panel";
+
+  const isBusy = props.isSending || props.isUploading;
 
   return (
     <section className={columnClass} aria-label="Tutor chat">
       <div className="column-header">
         <h2 className="column-title">Tutor chat</h2>
-        {props.activeKeyword !== null && (
-          <span className="keyword-badge">Context: {props.activeKeyword}</span>
-        )}
       </div>
 
       {props.sessionId === null ? (
@@ -109,8 +125,7 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
 
             {!props.isLoading && props.messages.length === 0 && (
               <p className="column-empty">
-                Submit a question in the middle panel, then ask follow-ups
-                here.
+                Ask a question or upload a PDF to get started.
               </p>
             )}
 
@@ -144,19 +159,37 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
               id="tutor-input"
               className="chat-input"
               rows={3}
-              placeholder="Ask a follow-up question…"
+              placeholder="Ask a question…"
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
               onKeyDown={handleKeyDown}
-              disabled={props.isSending}
+              disabled={isBusy}
             />
-            <button
-              type="submit"
-              className="btn-send"
-              disabled={props.isSending || inputValue.trim().length === 0}
-            >
-              {props.isSending ? "Sending…" : "Send"}
-            </button>
+            <div className="tutor-input-actions">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                className="sr-only"
+                onChange={handleFileChange}
+                disabled={isBusy}
+              />
+              <button
+                type="button"
+                className="btn-secondary btn-attach"
+                disabled={isBusy}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {props.isUploading ? "Uploading…" : "Upload PDF"}
+              </button>
+              <button
+                type="submit"
+                className="btn-send"
+                disabled={isBusy || inputValue.trim().length === 0}
+              >
+                {props.isSending ? "Tutor is thinking…" : "Send"}
+              </button>
+            </div>
           </form>
         </>
       )}

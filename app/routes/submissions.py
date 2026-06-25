@@ -15,7 +15,6 @@ async def create_submission(request: Request[User, Token, None], chat_session_re
         raise NotFoundException(detail=f'Chat session {session_id} not found')
     submission = Submission(chat_session_id=session_id, question_text=data.question_text, reference_text=data.reference_text)
     created = await submission_repo.add(submission)
-    keywords: list[str] = []
-    submission_read = SubmissionRead(id=created.id, chat_session_id=created.chat_session_id, question_text=created.question_text, reference_text=created.reference_text, keywords=keywords)
+    submission_read = SubmissionRead(id=created.id, chat_session_id=created.chat_session_id, question_text=created.question_text, reference_text=created.reference_text, keywords=[])
     return submission_read
 submissions_router = Router(path='/api/chat-sessions', route_handlers=[create_submission], dependencies={'chat_session_repo': provide_chat_session_repo_dep, 'submission_repo': provide_submission_repo_dep})

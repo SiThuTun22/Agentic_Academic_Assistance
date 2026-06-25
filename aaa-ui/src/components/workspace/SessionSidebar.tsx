@@ -3,6 +3,7 @@ import type { ChatSessionRead } from "../../lib/apiTypes";
 interface SessionSidebarProps {
   sessions: ChatSessionRead[];
   activeSessionId: string | null;
+  collapsed: boolean;
   isLoading: boolean;
   error: string | null;
   onSelectSession: (sessionId: string) => void;
@@ -11,11 +12,12 @@ interface SessionSidebarProps {
   className?: string;
 }
 
-function formatTone(tone: ChatSessionRead["tutor_tone"]): string {
-  if (tone === "strict_academic") {
-    return "Strict";
+function sessionInitial(title: string): string {
+  const trimmed = title.trim();
+  if (trimmed.length === 0) {
+    return "?";
   }
-  return "Socratic";
+  return trimmed.charAt(0).toUpperCase();
 }
 
 export function SessionSidebar(props: SessionSidebarProps) {
@@ -24,9 +26,52 @@ export function SessionSidebar(props: SessionSidebarProps) {
     ? "btn-new-session btn-new-session-prominent"
     : "btn-new-session";
 
-  const columnClass = props.className
-    ? `workspace-column session-sidebar ${props.className}`
-    : "workspace-column session-sidebar";
+  let columnClass = "workspace-column session-sidebar";
+  if (props.collapsed) {
+    columnClass = `${columnClass} session-sidebar--collapsed`;
+  }
+  if (props.className) {
+    columnClass = `${columnClass} ${props.className}`;
+  }
+
+  if (props.collapsed) {
+    return (
+      <aside className={columnClass} aria-label="Chat sessions">
+        <button
+          type="button"
+          className="sidebar-rail-btn"
+          onClick={props.onNewSession}
+          title="New session"
+          aria-label="New session"
+        >
+          +
+        </button>
+
+        <ul className="session-rail-list">
+          {props.sessions.map((session) => {
+            const isActive = session.id === props.activeSessionId;
+            const itemClass = isActive
+              ? "sidebar-rail-item active"
+              : "sidebar-rail-item";
+
+            return (
+              <li key={session.id}>
+                <button
+                  type="button"
+                  className={itemClass}
+                  title={session.title}
+                  aria-label={session.title}
+                  onClick={() => props.onSelectSession(session.id)}
+                >
+                  {sessionInitial(session.title)}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </aside>
+    );
+  }
 
   return (
     <aside className={columnClass} aria-label="Chat sessions">
@@ -78,9 +123,6 @@ export function SessionSidebar(props: SessionSidebarProps) {
                 onClick={() => props.onSelectSession(session.id)}
               >
                 <span className="session-title">{session.title}</span>
-                <span className="session-meta">
-                  {formatTone(session.tutor_tone)} · {session.tutor_avatar}
-                </span>
               </button>
             </li>
           );

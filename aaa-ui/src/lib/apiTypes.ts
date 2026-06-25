@@ -68,6 +68,35 @@ export interface ChatMessageRead {
   keyword_context: string | null;
 }
 
+export interface ChatMessageExchangeRead {
+  user_message: ChatMessageRead;
+  assistant_message: ChatMessageRead;
+}
+
+export interface DocumentAnnotationRead {
+  term: string;
+  definition: string;
+  page: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface DocumentRead {
+  id: string;
+  chat_session_id: string;
+  filename: string;
+  file_url: string;
+  annotations: DocumentAnnotationRead[];
+}
+
+export interface DocumentUploadRead {
+  document: DocumentRead;
+  user_message: ChatMessageRead;
+  assistant_message: ChatMessageRead;
+}
+
 export interface ApiError {
   detail: string;
 }

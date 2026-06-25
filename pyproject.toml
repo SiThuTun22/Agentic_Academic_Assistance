@@ -12,6 +12,9 @@ dependencies = [
     "python-dotenv",
     "pydantic[email]",
     "advanced-alchemy[uuid]",
+    "langchain-ollama",
+    "langchain-core",
+    "pymupdf",
 ]
 
 [project.optional-dependencies]

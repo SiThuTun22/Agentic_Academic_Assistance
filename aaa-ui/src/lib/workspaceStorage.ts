@@ -1,26 +1,21 @@
-import type { SubmissionRead } from "./apiTypes";
-import type { ThemeMode } from "../types";
+export type LayoutMode = "chat" | "document";
+
+export type MobileTab = "sessions" | "document" | "chat";
 
 const ACTIVE_SESSION_KEY = "aaa_active_session_id";
 const THEME_KEY = "aaa_theme";
 const LOGIN_EMAIL_KEY = "aaa_login_email";
 const MOBILE_TAB_KEY = "aaa_mobile_tab";
 
-export type MobileTab = "sessions" | "question" | "chat";
-
-function submissionKey(sessionId: string): string {
-  return `aaa_submission_${sessionId}`;
-}
-
-function isThemeMode(value: string): value is ThemeMode {
+function isThemeMode(value: string): value is import("../types").ThemeMode {
   return value === "light" || value === "dark" || value === "high-contrast";
 }
 
 function isMobileTab(value: string): value is MobileTab {
-  return value === "sessions" || value === "question" || value === "chat";
+  return value === "sessions" || value === "document" || value === "chat";
 }
 
-export function getInitialThemeMode(): ThemeMode {
+export function getInitialThemeMode(): import("../types").ThemeMode {
   const stored = localStorage.getItem(THEME_KEY);
   if (stored !== null && isThemeMode(stored)) {
     return stored;
@@ -33,7 +28,7 @@ export function getInitialThemeMode(): ThemeMode {
   return "light";
 }
 
-export function setStoredThemeMode(theme: ThemeMode): void {
+export function setStoredThemeMode(theme: import("../types").ThemeMode): void {
   localStorage.setItem(THEME_KEY, theme);
 }
 
@@ -47,30 +42,6 @@ export function setActiveSessionId(sessionId: string): void {
 
 export function clearActiveSessionId(): void {
   localStorage.removeItem(ACTIVE_SESSION_KEY);
-}
-
-export function getStoredSubmission(sessionId: string): SubmissionRead | null {
-  const raw = sessionStorage.getItem(submissionKey(sessionId));
-  if (raw === null) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(raw) as SubmissionRead;
-  } catch {
-    return null;
-  }
-}
-
-export function setStoredSubmission(
-  sessionId: string,
-  submission: SubmissionRead,
-): void {
-  sessionStorage.setItem(submissionKey(sessionId), JSON.stringify(submission));
-}
-
-export function clearStoredSubmission(sessionId: string): void {
-  sessionStorage.removeItem(submissionKey(sessionId));
 }
 
 export function getStoredLoginEmail(): string {

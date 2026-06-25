@@ -4,14 +4,15 @@ import {
   checkHealth,
   createMessage,
   createSession,
-  createSubmission,
+  getLatestDocument,
   listMessages,
   listSessions,
+  uploadDocument,
 } from "../../lib/api";
 import type {
   ChatMessageRead,
   ChatSessionRead,
-  SubmissionRead,
+  DocumentRead,
 } from "../../lib/apiTypes";
 import { useAuth } from "../../context/AuthContext";
 import type { ThemeMode } from "../../types";
@@ -19,17 +20,16 @@ import {
   getActiveSessionId,
   getInitialThemeMode,
   getStoredMobileTab,
-  getStoredSubmission,
   setActiveSessionId,
   setStoredMobileTab,
-  setStoredSubmission,
   setStoredThemeMode,
+  type LayoutMode,
   type MobileTab,
 } from "../../lib/workspaceStorage";
 import { AppHeader } from "../academic/AppHeader";
+import { DocumentViewerPanel } from "./DocumentViewerPanel";
 import { MobileTabBar } from "./MobileTabBar";
 import { NewSessionModal, type NewSessionFormData } from "./NewSessionModal";
-import { QuestionPanel } from "./QuestionPanel";
 import { SessionSidebar } from "./SessionSidebar";
 import { TutorChatPanel } from "./TutorChatPanel";
 
@@ -47,7 +47,14 @@ function formatAvatar(avatar: ChatSessionRead["tutor_avatar"]): string {
   return "Female tutor";
 }
 
-function getMobileColumnClass(tab: MobileTab, column: MobileTab): string {
+function getMobileColumnClass(
+  tab: MobileTab,
+  column: MobileTab,
+  layoutMode: LayoutMode,
+): string {
+  if (layoutMode === "chat" && column === "document") {
+    return "hidden-mobile hidden-desktop";
+  }
   if (tab === column) {
     return "";
   }
@@ -65,17 +72,17 @@ export function Workspace() {
     null,
   );
   const [messages, setMessages] = useState<ChatMessageRead[]>([]);
-  const [currentSubmission, setCurrentSubmission] =
-    useState<SubmissionRead | null>(null);
-  const [activeKeyword, setActiveKeyword] = useState<string | null>(null);
+  const [currentDocument, setCurrentDocument] = useState<DocumentRead | null>(
+    null,
+  );
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("chat");
 
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionsError, setSessionsError] = useState<string | null>(null);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messagesError, setMessagesError] = useState<string | null>(null);
-  const [submissionSubmitting, setSubmissionSubmitting] = useState(false);
-  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [messageSending, setMessageSending] = useState(false);
+  const [documentUploading, setDocumentUploading] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalSubmitting, setModalSubmitting] = useState(false);
@@ -96,7 +103,7 @@ export function Workspace() {
   }, []);
 
   const selectSession = useCallback(
-    (sessionId: string, mobileTab: MobileTab = "question") => {
+    (sessionId: string, mobileTab: MobileTab = "chat") => {
       setActiveSessionIdState(sessionId);
       setActiveSessionId(sessionId);
       setActiveMobileTab(mobileTab);
@@ -143,6 +150,22 @@ export function Workspace() {
     }
   }, []);
 
+  const loadDocument = useCallback(async (sessionId: string) => {
+    try {
+      const document = await getLatestDocument(sessionId);
+      if (document === null) {
+        setCurrentDocument(null);
+        setLayoutMode("chat");
+        return;
+      }
+      setCurrentDocument(document);
+      setLayoutMode("document");
+    } catch {
+      setCurrentDocument(null);
+      setLayoutMode("chat");
+    }
+  }, []);
+
   useEffect(() => {
     setStoredThemeMode(themeMode);
   }, [themeMode]);
@@ -179,18 +202,17 @@ export function Workspace() {
   useEffect(() => {
     if (activeSessionId === null) {
       setMessages([]);
-      setCurrentSubmission(null);
-      setActiveKeyword(null);
+      setCurrentDocument(null);
+      setLayoutMode("chat");
       return;
     }
 
-    setActiveKeyword(null);
-    setCurrentSubmission(getStoredSubmission(activeSessionId));
     loadMessages(activeSessionId);
-  }, [activeSessionId, loadMessages]);
+    loadDocument(activeSessionId);
+  }, [activeSessionId, loadDocument, loadMessages]);
 
   function handleSelectSession(sessionId: string): void {
-    selectSession(sessionId, "question");
+    selectSession(sessionId, "chat");
   }
 
   async function handleCreateSession(data: NewSessionFormData): Promise<void> {
@@ -200,7 +222,7 @@ export function Workspace() {
     try {
       const created = await createSession(data);
       setSessions((prev) => [created, ...prev]);
-      selectSession(created.id, "question");
+      selectSession(created.id, "chat");
       setIsModalOpen(false);
     } catch (error) {
       const message =
@@ -213,38 +235,6 @@ export function Workspace() {
     }
   }
 
-  async function handleSubmitQuestion(
-    questionText: string,
-    referenceText: string | null,
-  ): Promise<void> {
-    if (activeSessionId === null) {
-      return;
-    }
-
-    setSubmissionSubmitting(true);
-    setSubmissionError(null);
-
-    try {
-      const submission = await createSubmission(activeSessionId, {
-        question_text: questionText,
-        reference_text: referenceText,
-      });
-      setCurrentSubmission(submission);
-      setStoredSubmission(activeSessionId, submission);
-      setActiveKeyword(null);
-      setActiveMobileTab("question");
-    } catch (error) {
-      const message =
-        error instanceof ApiRequestError
-          ? error.message
-          : "Failed to submit question.";
-      setSubmissionError(message);
-      throw error;
-    } finally {
-      setSubmissionSubmitting(false);
-    }
-  }
-
   async function handleSendMessage(content: string): Promise<void> {
     if (activeSessionId === null) {
       return;
@@ -254,25 +244,73 @@ export function Workspace() {
     setMessagesError(null);
 
     try {
-      const message = await createMessage(activeSessionId, {
+      const exchange = await createMessage(activeSessionId, {
         content,
-        keyword_context: activeKeyword,
       });
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => [
+        ...prev,
+        exchange.user_message,
+        exchange.assistant_message,
+      ]);
       setActiveMobileTab("chat");
     } catch (error) {
-      const message =
-        error instanceof ApiRequestError
-          ? error.message
-          : "Failed to send message.";
+      let message = "Failed to send message.";
+      if (error instanceof ApiRequestError) {
+        if (error.status === 503) {
+          message = error.message || "Local AI (Ollama) is not running.";
+        } else {
+          message = error.message;
+        }
+      }
       setMessagesError(message);
+      if (activeSessionId !== null) {
+        loadMessages(activeSessionId);
+      }
       throw error;
     } finally {
       setMessageSending(false);
     }
   }
 
+  async function handleUploadPdf(file: File): Promise<void> {
+    if (activeSessionId === null) {
+      return;
+    }
+
+    setDocumentUploading(true);
+    setMessagesError(null);
+
+    try {
+      const result = await uploadDocument(activeSessionId, file);
+      setCurrentDocument(result.document);
+      setLayoutMode("document");
+      setMessages((prev) => [
+        ...prev,
+        result.user_message,
+        result.assistant_message,
+      ]);
+      setActiveMobileTab("document");
+    } catch (error) {
+      let message = "Failed to upload PDF.";
+      if (error instanceof ApiRequestError) {
+        if (error.status === 503) {
+          message = error.message || "Local AI (Ollama) is not running.";
+        } else {
+          message = error.message;
+        }
+      }
+      setMessagesError(message);
+      throw error;
+    } finally {
+      setDocumentUploading(false);
+    }
+  }
+
   const rootClass = `academic-app theme-${themeMode}`;
+  let layoutClass = "workspace-layout workspace-layout--chat";
+  if (layoutMode === "document") {
+    layoutClass = "workspace-layout workspace-layout--document";
+  }
 
   return (
     <div className={rootClass}>
@@ -309,13 +347,15 @@ export function Workspace() {
 
       <MobileTabBar
         activeTab={activeMobileTab}
+        layoutMode={layoutMode}
         onTabChange={setActiveMobileTab}
       />
 
-      <div className="workspace-layout">
+      <div className={layoutClass}>
         <SessionSidebar
           sessions={sessions}
           activeSessionId={activeSessionId}
+          collapsed={layoutMode === "document"}
           isLoading={sessionsLoading}
           error={sessionsError}
           onSelectSession={handleSelectSession}
@@ -326,34 +366,39 @@ export function Workspace() {
           onRetry={() => {
             loadSessions();
           }}
-          className={getMobileColumnClass(activeMobileTab, "sessions")}
+          className={getMobileColumnClass(
+            activeMobileTab,
+            "sessions",
+            layoutMode,
+          )}
         />
 
-        <QuestionPanel
-          sessionId={activeSessionId}
-          submission={currentSubmission}
-          activeKeyword={activeKeyword}
-          isSubmitting={submissionSubmitting}
-          error={submissionError}
-          onSubmit={handleSubmitQuestion}
-          onSelectKeyword={setActiveKeyword}
-          className={getMobileColumnClass(activeMobileTab, "question")}
-        />
+        {layoutMode === "document" && (
+          <DocumentViewerPanel
+            document={currentDocument}
+            className={getMobileColumnClass(
+              activeMobileTab,
+              "document",
+              layoutMode,
+            )}
+          />
+        )}
 
         <TutorChatPanel
           sessionId={activeSessionId}
           messages={messages}
-          activeKeyword={activeKeyword}
           isLoading={messagesLoading}
           isSending={messageSending}
+          isUploading={documentUploading}
           error={messagesError}
           onSend={handleSendMessage}
+          onUploadPdf={handleUploadPdf}
           onRetryMessages={() => {
             if (activeSessionId !== null) {
               loadMessages(activeSessionId);
             }
           }}
-          className={getMobileColumnClass(activeMobileTab, "chat")}
+          className={getMobileColumnClass(activeMobileTab, "chat", layoutMode)}
         />
       </div>
 

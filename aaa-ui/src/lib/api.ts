@@ -1,13 +1,14 @@
 import { getToken } from "./auth";
 import type {
   ChatMessageCreate,
+  ChatMessageExchangeRead,
   ChatMessageRead,
   ChatSessionCreate,
   ChatSessionRead,
+  DocumentRead,
+  DocumentUploadRead,
   LoginRequest,
   RegisterRequest,
-  SubmissionCreate,
-  SubmissionRead,
   TokenResponse,
   UserMe,
 } from "./apiTypes";
@@ -39,7 +40,9 @@ async function request<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
+  if (!(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
 
   const token = getToken();
   if (token !== null) {
@@ -122,17 +125,53 @@ export function getSession(sessionId: string): Promise<ChatSessionRead> {
   return request<ChatSessionRead>(`/api/chat-sessions/${sessionId}`);
 }
 
-export function createSubmission(
+export function getLatestDocument(
   sessionId: string,
-  data: SubmissionCreate,
-): Promise<SubmissionRead> {
-  return request<SubmissionRead>(
-    `/api/chat-sessions/${sessionId}/submissions`,
+): Promise<DocumentRead | null> {
+  return request<DocumentRead | null>(
+    `/api/chat-sessions/${sessionId}/documents/latest`,
+  );
+}
+
+export function uploadDocument(
+  sessionId: string,
+  file: File,
+): Promise<DocumentUploadRead> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request<DocumentUploadRead>(
+    `/api/chat-sessions/${sessionId}/documents`,
     {
       method: "POST",
-      body: JSON.stringify(data),
+      body: formData,
     },
   );
+}
+
+export async function fetchDocumentFile(fileUrl: string): Promise<ArrayBuffer> {
+  const headers = new Headers();
+  const token = getToken();
+  if (token !== null) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(fileUrl, { headers });
+  } catch {
+    throw new NetworkError();
+  }
+
+  if (!response.ok) {
+    throw new ApiRequestError(
+      `Failed to load document (${response.status})`,
+      response.status,
+    );
+  }
+
+  const buffer = await response.arrayBuffer();
+  return buffer;
 }
 
 export function listMessages(
@@ -152,8 +191,8 @@ export function listMessages(
 export function createMessage(
   sessionId: string,
   data: ChatMessageCreate,
-): Promise<ChatMessageRead> {
-  return request<ChatMessageRead>(
+): Promise<ChatMessageExchangeRead> {
+  return request<ChatMessageExchangeRead>(
     `/api/chat-sessions/${sessionId}/messages`,
     {
       method: "POST",

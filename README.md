@@ -1,116 +1,51 @@
 # Agentic Academic Assistant (AAA)
 
-Litestar backend + React UI (`aaa-ui/`) for a **Socratic tutoring platform** — interactive explanations for programming/CS topics, with a three-column workspace (chat history, question reader, tutor chat).
+Litestar backend + React UI (`aaa-ui/`) for a tutoring workspace with PDF upload, interactive document reading, and English Q&A via local Ollama.
 
-JWT auth, chat sessions, submissions, and message stubs are implemented. Keyword generation and Socratic tutor replies are not yet implemented.
+## Quick start
 
-## Setup
+```bash
+docker compose up -d db
+cp .env.example .env
+uv sync --extra dev
+uv run alembic upgrade head
+uv run main.py          # http://localhost:8000
+cd aaa-ui && npm install && npm run dev   # http://localhost:5173
+```
 
-1. Start Postgres in Docker (dev database on host port **5434**):
+## Ollama (host, GPU)
 
-   ```bash
-   docker compose up -d
-   docker compose ps   # optional: wait until db is healthy
-   ```
+```bash
+docker rm -f aaa-ollama 2>/dev/null || true
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull llama3.2
+systemctl status ollama
+./scripts/verify-gpu-ollama.sh
+```
 
-   **Mac + pgAdmin:** Docker uses port **5434** so your existing Local Postgres on **5432** (e.g. pgAdmin `AAA`) is untouched.
+Default API: `http://localhost:11434` (set in `.env`).
 
-   **Linux server:** Run `docker compose up -d` on the same machine as `uv run main.py` so the app and DB share `localhost:5434`.
+## Product flow
 
-   **Stop DB:** `docker compose down` (keeps data). **Reset dev data:** `docker compose down -v`, then `up -d` and run migrations again.
-
-2. Copy env file:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Install dependencies:
-
-   ```bash
-   uv sync --extra dev
-   ```
-
-4. Run migrations:
-
-   ```bash
-   uv run alembic upgrade head
-   ```
-
-   **Migration squash / reset:** If you see `Can't locate revision identified by '001_initial'`, your DB still points at the old paper schema. Reset the dev database, then migrate again:
-
-   ```bash
-   # Option A: Docker volume reset (recommended)
-   docker compose down -v
-   docker compose up -d
-   uv run alembic upgrade head
-   ```
-
-   ```bash
-   # Option B: wipe schema only (keeps the database container/volume)
-   psql "postgresql://aaa:aaa@localhost:5434/aaa" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-   uv run alembic upgrade head
-   ```
-
-   For Option B, use a `psql`-compatible URL (replace `postgresql+asyncpg://` with `postgresql://`).
-
-5. Start the server:
-
-   ```bash
-   uv run main.py
-   ```
-
-6. Start the UI (separate terminal):
-
-   ```bash
-   cd aaa-ui
-   npm install
-   npm run dev
-   ```
-
-   Open http://localhost:5173.
+1. Create a session (left sidebar + tutor chat — **two columns** by default)
+2. Upload a **PDF** from tutor chat (right column)
+3. Layout switches to three columns: icon sidebar | PDF viewer | chat
+4. Hover highlighted terms on the PDF for short definitions
+5. Tutor auto-summarizes the document; ask follow-ups in chat
 
 ## URLs
 
 | URL | Description |
 |-----|-------------|
-| http://localhost:8000/scalar | Scalar API UI (public) |
-| http://localhost:8000/openapi.json | OpenAPI schema |
+| http://localhost:8000/scalar | API docs |
 | http://localhost:8000/health | Health check |
-| http://localhost:5173 | React UI (aaa-ui) |
+| http://localhost:5173 | React UI |
 
-## Demo account (local dev)
+## Demo account
 
-| Field | Value |
-|-------|-------|
-| Email | `demo@example.com` |
-| Password | `demo1234` |
-
-Create the demo user after a fresh database:
-
-```bash
-curl -X POST http://localhost:8000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"demo@example.com","display_name":"Demo User","password":"demo1234"}'
-```
-
-PowerShell:
-
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/auth/register" -Method POST `
-  -ContentType "application/json" `
-  -Body '{"email":"demo@example.com","display_name":"Demo User","password":"demo1234"}'
-```
-
-Then sign in via the UI (http://localhost:5173) or `POST /api/auth/login` in Scalar.
-
-## Auth
-
-| Action | Where |
-|--------|-------|
-| Sign in / Register | UI at http://localhost:5173 |
-| API testing | Scalar at http://localhost:8000/scalar |
-| Sign out | UI workspace toolbar |
+| Email | Password |
+|-------|----------|
+| `demo@example.com` | `demo1234` |
 
 ## Environment variables
 
@@ -118,26 +53,28 @@ Then sign in via the UI (http://localhost:5173) or `POST /api/auth/login` in Sca
 |----------|---------|---------|
 | `DATABASE_URL` | see `.env.example` | PostgreSQL async URL |
 | `JWT_SECRET` | `change-me-in-production` | JWT signing secret |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API |
+| `OLLAMA_MODEL` | `llama3.2` | Model tag |
+| `OLLAMA_TIMEOUT_SECONDS` | `120` | Request timeout |
+| `OLLAMA_MAX_TOKENS` | `384` | Max reply tokens |
 
-## Endpoints
+## API overview
 
-- `GET /health` — public
-- `GET /` — public (OpenAPI schema JSON)
-- `GET /openapi.json` — public (OpenAPI schema; used by Scalar)
-- `GET /scalar` — public (Scalar API UI)
 - `POST /api/auth/register`, `POST /api/auth/login` — public
-- `GET /api/auth/me` — requires JWT
-- `GET/POST /api/chat-sessions`, `GET /api/chat-sessions/{id}` — requires JWT (left sidebar sessions)
-- `POST /api/chat-sessions/{id}/submissions` — requires JWT (middle column input; returns stub `keywords: []`)
-- `GET/POST /api/chat-sessions/{id}/messages` — requires JWT (right column chat thread; user messages only for now)
+- `GET/POST /api/chat-sessions` — sessions (JWT)
+- `POST /api/chat-sessions/{id}/documents` — PDF upload + processing (JWT + Ollama)
+- `GET /api/chat-sessions/{id}/documents/latest` — latest document metadata
+- `GET /api/chat-sessions/{id}/documents/{doc_id}/file` — PDF file stream
+- `GET/POST /api/chat-sessions/{id}/messages` — tutor Q&A (JWT + Ollama on POST)
 
-## Product flow
+## Database reset
 
-1. **Setup** — tutor tone + avatar on chat session create
-2. **Submit** — question + optional reference text via submissions
-3. **Keywords** — stub empty list (future: interactive reader tokens)
-4. **Deep-dive chat** — messages with optional `keyword_context` (future: Socratic tutor replies in Myanmar)
+```bash
+docker compose down -v && docker compose up -d db && uv run alembic upgrade head
+```
 
-## UI documentation
+Postgres runs on port **5434** (Docker).
 
-See [`aaa-ui/README.md`](aaa-ui/README.md) for frontend setup, auth flow, and workspace columns.
+## UI
+
+See [`aaa-ui/README.md`](aaa-ui/README.md).
