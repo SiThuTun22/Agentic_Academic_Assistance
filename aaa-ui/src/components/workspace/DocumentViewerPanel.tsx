@@ -20,14 +20,6 @@ interface DocumentViewerPanelProps {
   className?: string;
 }
 
-function getSessionInitial(title: string): string {
-  const trimmed = title.trim();
-  if (trimmed.length === 0) {
-    return "?";
-  }
-  return trimmed.charAt(0).toUpperCase();
-}
-
 export function DocumentViewerPanel(props: DocumentViewerPanelProps) {
   const [pages, setPages] = useState<PageRenderState[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -253,5 +245,3 @@ export function DocumentViewerPanel(props: DocumentViewerPanelProps) {
     </section>
   );
 }
-
-export { getSessionInitial };

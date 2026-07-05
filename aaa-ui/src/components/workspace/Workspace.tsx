@@ -26,7 +26,7 @@ import {
   type LayoutMode,
   type MobileTab,
 } from "../../lib/workspaceStorage";
-import { AppHeader } from "../academic/AppHeader";
+import { AppHeader } from "./AppHeader";
 import { DocumentViewerPanel } from "./DocumentViewerPanel";
 import { MobileTabBar } from "./MobileTabBar";
 import { NewSessionModal, type NewSessionFormData } from "./NewSessionModal";

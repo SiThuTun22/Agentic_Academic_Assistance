@@ -42,22 +42,8 @@ export interface ChatSessionRead {
   owner_id: string;
 }
 
-export interface SubmissionCreate {
-  question_text: string;
-  reference_text?: string | null;
-}
-
-export interface SubmissionRead {
-  id: string;
-  chat_session_id: string;
-  question_text: string;
-  reference_text: string | null;
-  keywords: string[];
-}
-
 export interface ChatMessageCreate {
   content: string;
-  keyword_context?: string | null;
 }
 
 export interface ChatMessageRead {
@@ -65,7 +51,6 @@ export interface ChatMessageRead {
   chat_session_id: string;
   role: MessageRole;
   content: string;
-  keyword_context: string | null;
 }
 
 export interface ChatMessageExchangeRead {

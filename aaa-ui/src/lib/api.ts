@@ -121,10 +121,6 @@ export function createSession(
   });
 }
 
-export function getSession(sessionId: string): Promise<ChatSessionRead> {
-  return request<ChatSessionRead>(`/api/chat-sessions/${sessionId}`);
-}
-
 export function getLatestDocument(
   sessionId: string,
 ): Promise<DocumentRead | null> {

@@ -1,6 +1,8 @@
 from litestar import get
-from app.config import APP_VERSION
+
+from app.lib.config import APP_VERSION
 from app.schemas import HealthResponse
+
 
 @get('/health')
 async def health() -> HealthResponse:

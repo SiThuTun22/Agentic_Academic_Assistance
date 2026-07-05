@@ -5,7 +5,7 @@ from langchain_core.runnables import Runnable
 from langchain_ollama import ChatOllama
 
 from app.ai.errors import LlmUnavailableError
-from app.config import get_ollama_base_url, get_ollama_max_tokens, get_ollama_model, get_ollama_timeout_seconds
+from app.lib.config import get_ollama_base_url, get_ollama_max_tokens, get_ollama_model, get_ollama_timeout_seconds
 
 _OLLAMA_DOWN = 'Ollama is not reachable. Start Ollama and pull a model.'
 

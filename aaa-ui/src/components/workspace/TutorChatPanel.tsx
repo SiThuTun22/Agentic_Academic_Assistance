@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { ChatMessageRead } from "../../lib/apiTypes";
+import { TutorMessageContent } from "./TutorMessageContent";
+import { TutorThinkingIndicator } from "./TutorThinkingIndicator";
 
 interface TutorChatPanelProps {
   sessionId: string | null;
@@ -30,7 +32,20 @@ function TutorMessageBubble(props: { message: ChatMessageRead }) {
         <span className="bubble-role">{isUser ? "You" : "Tutor"}</span>
       </div>
       <div className="bubble-body">
-        <p className="bubble-text">{message.content}</p>
+        <TutorMessageContent content={message.content} isUser={isUser} />
+      </div>
+    </article>
+  );
+}
+
+function PendingUserBubble(props: { content: string }) {
+  return (
+    <article className="message-bubble user" aria-label="Your message">
+      <div className="bubble-header">
+        <span className="bubble-role">You</span>
+      </div>
+      <div className="bubble-body">
+        <TutorMessageContent content={props.content} isUser={true} />
       </div>
     </article>
   );
@@ -38,44 +53,48 @@ function TutorMessageBubble(props: { message: ChatMessageRead }) {
 
 export function TutorChatPanel(props: TutorChatPanelProps) {
   const [inputValue, setInputValue] = useState("");
+  const [pendingUserContent, setPendingUserContent] = useState<string | null>(
+    null,
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isBusy = props.isSending || props.isUploading;
 
   useEffect(() => {
     if (messagesEndRef.current !== null) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [props.messages]);
+  }, [props.messages, props.isSending, props.isUploading, pendingUserContent]);
+
+  async function submitMessage(content: string): Promise<void> {
+    if (content.length === 0 || props.sessionId === null || isBusy) {
+      return;
+    }
+
+    setPendingUserContent(content);
+    setInputValue("");
+
+    try {
+      await props.onSend(content);
+    } catch {
+      setInputValue(content);
+    } finally {
+      setPendingUserContent(null);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     const trimmed = inputValue.trim();
-    if (trimmed.length === 0 || props.sessionId === null || props.isSending) {
-      return;
-    }
-
-    try {
-      await props.onSend(trimmed);
-      setInputValue("");
-    } catch {
-      // Parent sets error state; keep input for retry.
-    }
+    await submitMessage(trimmed);
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>): void {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       const trimmed = inputValue.trim();
-      if (trimmed.length > 0 && !props.isSending && !props.isUploading) {
-        props
-          .onSend(trimmed)
-          .then(() => {
-            setInputValue("");
-          })
-          .catch(() => {
-            // Parent sets error state; keep input for retry.
-          });
-      }
+      submitMessage(trimmed);
     }
   }
 
@@ -90,10 +109,15 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
     const file = fileList[0];
     event.target.value = "";
 
+    const uploadLabel = `Uploaded "${file.name}"`;
+    setPendingUserContent(uploadLabel);
+
     try {
       await props.onUploadPdf(file);
     } catch {
       // Parent sets error state.
+    } finally {
+      setPendingUserContent(null);
     }
   }
 
@@ -101,7 +125,15 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
     ? `workspace-column tutor-chat-panel ${props.className}`
     : "workspace-column tutor-chat-panel";
 
-  const isBusy = props.isSending || props.isUploading;
+  const showEmptyState =
+    !props.isLoading &&
+    props.messages.length === 0 &&
+    pendingUserContent === null;
+
+  let thinkingMode: "sending" | "uploading" = "sending";
+  if (props.isUploading) {
+    thinkingMode = "uploading";
+  }
 
   return (
     <section className={columnClass} aria-label="Tutor chat">
@@ -123,7 +155,7 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
               <p className="column-status">Loading messages…</p>
             )}
 
-            {!props.isLoading && props.messages.length === 0 && (
+            {showEmptyState && (
               <p className="column-empty">
                 Ask a question or upload a PDF to get started.
               </p>
@@ -132,6 +164,12 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
             {props.messages.map((message) => (
               <TutorMessageBubble key={message.id} message={message} />
             ))}
+
+            {pendingUserContent !== null && (
+              <PendingUserBubble content={pendingUserContent} />
+            )}
+
+            {isBusy && <TutorThinkingIndicator mode={thinkingMode} />}
 
             <div ref={messagesEndRef} />
           </div>

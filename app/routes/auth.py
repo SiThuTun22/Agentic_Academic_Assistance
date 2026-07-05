@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 from litestar import Request, Router, get, post
 from litestar.exceptions import ClientException, NotAuthorizedException
 from litestar.security.jwt import Token
-from app.auth import hash_password, jwt_auth, verify_password
-from app.models import User
-from app.repos import UserRepo, provide_user_repo_dep
+
+from app.db.models import User
+from app.lib.security import hash_password, jwt_auth, verify_password
+from app.repositories import UserRepo, provide_user_repo_dep
 from app.schemas import LoginRequest, RegisterRequest, TokenResponse, UserMe
+
 
 @post('/register', status_code=201)
 async def register(user_repo: UserRepo, data: RegisterRequest) -> UserMe:
@@ -17,6 +20,7 @@ async def register(user_repo: UserRepo, data: RegisterRequest) -> UserMe:
     created = await user_repo.add(user)
     user_me = UserMe(id=created.id, email=created.email, display_name=created.display_name, is_active=created.is_active)
     return user_me
+
 
 @post('/login', status_code=200)
 async def login(user_repo: UserRepo, data: LoginRequest) -> TokenResponse:
@@ -32,9 +36,16 @@ async def login(user_repo: UserRepo, data: LoginRequest) -> TokenResponse:
     token_response = TokenResponse(access_token=access_token, token_type='bearer')
     return token_response
 
+
 @get('/me')
 async def get_me(request: Request[User, Token, None]) -> UserMe:
     user = request.user
     user_me = UserMe(id=user.id, email=user.email, display_name=user.display_name, is_active=user.is_active)
     return user_me
-auth_router = Router(path='/api/auth', route_handlers=[register, login, get_me], dependencies={'user_repo': provide_user_repo_dep})
+
+
+auth_router = Router(
+    path='/api/auth',
+    route_handlers=[register, login, get_me],
+    dependencies={'user_repo': provide_user_repo_dep},
+)
