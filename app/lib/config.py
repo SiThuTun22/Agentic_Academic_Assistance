@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 DEFAULT_DATABASE_URL = 'postgresql+asyncpg://aaa:aaa@localhost:5434/aaa'
 DEFAULT_JWT_SECRET = 'change-me-in-production'
 DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434'
-DEFAULT_OLLAMA_MODEL = 'llama3.2'
+DEFAULT_OLLAMA_MODEL = 'qwen3:8b'
 DEFAULT_OLLAMA_TIMEOUT_SECONDS = 120
 DEFAULT_OLLAMA_MAX_TOKENS = 384
 APP_VERSION = '0.1.0'

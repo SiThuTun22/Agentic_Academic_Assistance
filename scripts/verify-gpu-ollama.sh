@@ -2,7 +2,7 @@
 set -euo pipefail
 
 OLLAMA_URL="${OLLAMA_URL:-http://localhost:11434}"
-MODEL="${OLLAMA_MODEL:-llama3.2}"
+MODEL="${OLLAMA_MODEL:-qwen3:8b}"
 
 echo "=== Ollama API ==="
 if ! curl -sf "${OLLAMA_URL}/api/tags" >/dev/null; then

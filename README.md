@@ -18,7 +18,7 @@ cd aaa-ui && npm install && npm run dev   # http://localhost:5173
 ```bash
 docker rm -f aaa-ollama 2>/dev/null || true
 curl -fsSL https://ollama.com/install.sh | sh
-ollama pull llama3.2
+ollama pull qwen3:8b
 systemctl status ollama
 ./scripts/verify-gpu-ollama.sh
 ```
@@ -54,7 +54,7 @@ Default API: `http://localhost:11434` (set in `.env`).
 | `DATABASE_URL` | see `.env.example` | PostgreSQL async URL |
 | `JWT_SECRET` | `change-me-in-production` | JWT signing secret |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API |
-| `OLLAMA_MODEL` | `llama3.2` | Model tag |
+| `OLLAMA_MODEL` | `qwen3:8b` | Model tag |
 | `OLLAMA_TIMEOUT_SECONDS` | `120` | Request timeout |
 | `OLLAMA_MAX_TOKENS` | `384` | Max reply tokens |
 
