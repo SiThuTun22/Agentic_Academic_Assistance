@@ -105,7 +105,7 @@ export function Workspace() {
   const [currentDocument, setCurrentDocument] = useState<DocumentRead | null>(
     null,
   );
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>("chat");
+  const [documentPanelOpen, setDocumentPanelOpen] = useState(true);
 
   const [chatWidths, setChatWidths] = useState<ChatColumnWidths>(() =>
     getStoredChatColumnWidths(),
@@ -195,14 +195,14 @@ export function Workspace() {
       const document = await getLatestDocument(sessionId);
       if (document === null) {
         setCurrentDocument(null);
-        setLayoutMode("chat");
+        setDocumentPanelOpen(false);
         return;
       }
       setCurrentDocument(document);
-      setLayoutMode("document");
+      setDocumentPanelOpen(true);
     } catch {
       setCurrentDocument(null);
-      setLayoutMode("chat");
+      setDocumentPanelOpen(false);
     }
   }, []);
 
@@ -251,7 +251,7 @@ export function Workspace() {
     if (activeSessionId === null) {
       setMessages([]);
       setCurrentDocument(null);
-      setLayoutMode("chat");
+      setDocumentPanelOpen(false);
       return;
     }
 
@@ -423,7 +423,7 @@ export function Workspace() {
         clearActiveSessionId();
         setMessages([]);
         setCurrentDocument(null);
-        setLayoutMode("chat");
+        setDocumentPanelOpen(false);
         return;
       }
 
@@ -487,7 +487,7 @@ export function Workspace() {
     try {
       const result = await uploadDocument(activeSessionId, file);
       setCurrentDocument(result.document);
-      setLayoutMode("document");
+      setDocumentPanelOpen(true);
       setMessages((prev) => [
         ...prev,
         result.user_message,
@@ -510,21 +510,56 @@ export function Workspace() {
     }
   }
 
+  const hasDocument = currentDocument !== null;
+  const showDocumentColumn = hasDocument && documentPanelOpen;
+  const effectiveLayoutMode: LayoutMode = showDocumentColumn
+    ? "document"
+    : "chat";
+  const mobileLayoutMode: LayoutMode = hasDocument ? "document" : "chat";
+
+  function handleCloseDocumentPanel(): void {
+    setDocumentPanelOpen(false);
+    if (activeMobileTab === "document") {
+      setActiveMobileTab("chat");
+    }
+  }
+
+  function handleOpenDocumentPanel(): void {
+    setDocumentPanelOpen(true);
+    setActiveMobileTab("document");
+  }
+
+  function handleMobileTabChange(tab: MobileTab): void {
+    if (tab === "document" && hasDocument) {
+      setDocumentPanelOpen(true);
+    }
+    setActiveMobileTab(tab);
+  }
+
   const rootClass = `academic-app theme-${themeMode}`;
   let layoutClass = "workspace-layout workspace-layout--chat";
-  if (layoutMode === "document") {
+  if (hasDocument) {
     layoutClass = "workspace-layout workspace-layout--document";
+    if (!documentPanelOpen) {
+      layoutClass = `${layoutClass} workspace-layout--document-collapsed`;
+    }
   }
 
   let sessionsColumnWidth = chatWidths.sessions;
-  if (layoutMode === "document") {
+  if (hasDocument) {
     sessionsColumnWidth = documentWidths.sessions;
   }
   const sessionsCollapsed = sessionsColumnWidth < SESSIONS_EXPANDED_MIN_WIDTH;
 
   let gridTemplateColumns = `${chatWidths.sessions}px ${RESIZE_HANDLE_WIDTH}px minmax(${CHAT_MIN_CHAT_WIDTH}px, 1fr)`;
-  if (layoutMode === "document") {
-    gridTemplateColumns = `${documentWidths.sessions}px ${RESIZE_HANDLE_WIDTH}px ${documentWidths.document}px ${RESIZE_HANDLE_WIDTH}px minmax(${DOCUMENT_MIN_CHAT_WIDTH}px, 1fr)`;
+  if (hasDocument) {
+    let documentTrackWidth = 0;
+    let documentChatHandleWidth = 0;
+    if (documentPanelOpen) {
+      documentTrackWidth = documentWidths.document;
+      documentChatHandleWidth = RESIZE_HANDLE_WIDTH;
+    }
+    gridTemplateColumns = `${documentWidths.sessions}px ${RESIZE_HANDLE_WIDTH}px ${documentTrackWidth}px ${documentChatHandleWidth}px minmax(${DOCUMENT_MIN_CHAT_WIDTH}px, 1fr)`;
   }
 
   return (
@@ -562,8 +597,8 @@ export function Workspace() {
 
       <MobileTabBar
         activeTab={activeMobileTab}
-        layoutMode={layoutMode}
-        onTabChange={setActiveMobileTab}
+        layoutMode={mobileLayoutMode}
+        onTabChange={handleMobileTabChange}
       />
 
       <div
@@ -592,11 +627,11 @@ export function Workspace() {
           className={getMobileColumnClass(
             activeMobileTab,
             "sessions",
-            layoutMode,
+            effectiveLayoutMode,
           )}
         />
 
-        {layoutMode === "chat" && (
+        {!hasDocument && (
           <ResizeHandle
             ariaLabel="Resize sessions and chat columns"
             onDrag={handleChatSessionsDrag}
@@ -604,30 +639,66 @@ export function Workspace() {
           />
         )}
 
-        {layoutMode === "document" && (
-          <ResizeHandle
-            ariaLabel="Resize sessions and document columns"
-            onDrag={handleDocumentSessionsDrag}
-            onReset={resetDocumentSessionsWidth}
-          />
+        {hasDocument && (
+          <div className="column-divider">
+            <ResizeHandle
+              ariaLabel={
+                showDocumentColumn
+                  ? "Resize sessions and document columns"
+                  : "Resize sessions and chat columns"
+              }
+              onDrag={handleDocumentSessionsDrag}
+              onReset={resetDocumentSessionsWidth}
+            />
+            {!documentPanelOpen && (
+              <button
+                type="button"
+                className="btn-document-edge-toggle"
+                aria-label={`Show ${currentDocument.filename}`}
+                title={`Show ${currentDocument.filename}`}
+                onClick={handleOpenDocumentPanel}
+              >
+                <svg
+                  className="panel-toggle-icon"
+                  viewBox="0 0 16 16"
+                  width="12"
+                  height="12"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M6.22 3.22a.75.75 0 0 1 1.06 0l4 4a.75.75 0 0 1 0 1.06l-4 4a.75.75 0 1 1-1.06-1.06L9.44 8 6.22 4.28a.75.75 0 0 1 0-1.06z"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
         )}
 
-        {layoutMode === "document" && (
+        {hasDocument && (
           <DocumentViewerPanel
             document={currentDocument}
-            className={getMobileColumnClass(
-              activeMobileTab,
-              "document",
-              layoutMode,
-            )}
+            onClosePanel={handleCloseDocumentPanel}
+            className={
+              documentPanelOpen
+                ? getMobileColumnClass(
+                    activeMobileTab,
+                    "document",
+                    "document",
+                  )
+                : "document-viewer-panel--collapsed hidden-mobile"
+            }
           />
         )}
 
-        {layoutMode === "document" && (
+        {hasDocument && (
           <ResizeHandle
             ariaLabel="Resize document and chat columns"
             onDrag={handleDocumentChatDrag}
             onReset={resetDocumentChatWidth}
+            className={
+              showDocumentColumn ? undefined : "resize-handle--collapsed"
+            }
           />
         )}
 
@@ -645,7 +716,11 @@ export function Workspace() {
               loadMessages(activeSessionId);
             }
           }}
-          className={getMobileColumnClass(activeMobileTab, "chat", layoutMode)}
+          className={getMobileColumnClass(
+            activeMobileTab,
+            "chat",
+            effectiveLayoutMode,
+          )}
         />
       </div>
 

@@ -4,6 +4,7 @@ interface ResizeHandleProps {
   ariaLabel: string;
   onDrag: (deltaX: number) => void;
   onReset: () => void;
+  className?: string;
 }
 
 export function ResizeHandle(props: ResizeHandleProps) {
@@ -51,9 +52,14 @@ export function ResizeHandle(props: ResizeHandleProps) {
     props.onReset();
   }
 
+  let handleClass = "resize-handle";
+  if (props.className !== undefined && props.className.length > 0) {
+    handleClass = `${handleClass} ${props.className}`;
+  }
+
   return (
     <div
-      className="resize-handle"
+      className={handleClass}
       role="separator"
       aria-orientation="vertical"
       aria-label={props.ariaLabel}

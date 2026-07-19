@@ -17,6 +17,7 @@ interface PageRenderState {
 
 interface DocumentViewerPanelProps {
   document: DocumentRead | null;
+  onClosePanel?: () => void;
   className?: string;
 }
 
@@ -199,6 +200,28 @@ export function DocumentViewerPanel(props: DocumentViewerPanelProps) {
     <section className={columnClass} aria-label="Document viewer">
       <div className="column-header">
         <h2 className="column-title">{props.document.filename}</h2>
+        {props.onClosePanel !== undefined && (
+          <button
+            type="button"
+            className="btn-panel-toggle"
+            aria-label="Close document panel"
+            title="Close document panel"
+            onClick={props.onClosePanel}
+          >
+            <svg
+              className="panel-toggle-icon"
+              viewBox="0 0 16 16"
+              width="14"
+              height="14"
+              aria-hidden="true"
+            >
+              <path
+                fill="currentColor"
+                d="M3.5 3.5a.75.75 0 0 1 1.06 0L8 6.94l3.44-3.44a.75.75 0 1 1 1.06 1.06L9.06 8l3.44 3.44a.75.75 0 1 1-1.06 1.06L8 9.06l-3.44 3.44a.75.75 0 0 1-1.06-1.06L6.94 8 3.5 4.56a.75.75 0 0 1 0-1.06z"
+              />
+            </svg>
+          </button>
+        )}
       </div>
 
       <div className="document-viewer-body" ref={containerRef}>
