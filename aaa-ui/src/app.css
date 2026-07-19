@@ -904,10 +904,6 @@ body {
   overflow: hidden;
 }
 
-.workspace-layout--document {
-  transition: grid-template-columns 0.25s ease;
-}
-
 .workspace-column {
   display: flex;
   flex-direction: column;
@@ -936,13 +932,17 @@ body {
   touch-action: none;
   transition: opacity 0.25s ease;
   height: 100%;
+  flex-shrink: 0;
 }
 
 .column-divider {
   position: relative;
   z-index: 3;
-  min-width: 0;
+  width: 6px;
+  min-width: 6px;
+  max-width: 6px;
   height: 100%;
+  flex-shrink: 0;
 }
 
 .column-divider .resize-handle {
@@ -994,6 +994,7 @@ body {
   width: 2px;
   background: var(--border);
   transition: background 0.15s ease;
+  pointer-events: none;
 }
 
 .resize-handle:hover::after,
@@ -1016,12 +1017,11 @@ body.is-resizing-columns {
   user-select: none;
 }
 
-body.is-resizing-columns .workspace-layout--document {
-  transition: none;
-}
-
 body.is-resizing-columns iframe,
-body.is-resizing-columns canvas {
+body.is-resizing-columns canvas,
+body.is-resizing-columns .document-viewer-panel,
+body.is-resizing-columns .tutor-chat-panel,
+body.is-resizing-columns .session-sidebar {
   pointer-events: none;
 }
 
@@ -1518,7 +1518,6 @@ body.is-resizing-columns canvas {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .workspace-layout--document,
   .resize-handle,
   .document-viewer-panel {
     transition: none;
