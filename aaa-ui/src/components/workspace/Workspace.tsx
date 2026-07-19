@@ -46,7 +46,6 @@ import {
 import { AppHeader } from "./AppHeader";
 import { DocumentViewerPanel } from "./DocumentViewerPanel";
 import { MobileTabBar } from "./MobileTabBar";
-import { NewSessionModal, type NewSessionFormData } from "./NewSessionModal";
 import { ResizeHandle } from "./ResizeHandle";
 import { SessionSidebar } from "./SessionSidebar";
 import { TutorChatPanel } from "./TutorChatPanel";
@@ -92,6 +91,7 @@ function clamp(value: number, min: number, max: number): number {
 export function Workspace() {
   const { user, logout } = useAuth();
   const layoutRef = useRef<HTMLDivElement | null>(null);
+  const skipSessionHydrateRef = useRef(false);
 
   const [themeMode, setThemeMode] = useState<ThemeMode>(() =>
     getInitialThemeMode(),
@@ -121,9 +121,6 @@ export function Workspace() {
   const [messageSending, setMessageSending] = useState(false);
   const [documentUploading, setDocumentUploading] = useState(false);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalSubmitting, setModalSubmitting] = useState(false);
-  const [modalError, setModalError] = useState<string | null>(null);
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
     null,
   );
@@ -255,9 +252,40 @@ export function Workspace() {
       return;
     }
 
+    if (skipSessionHydrateRef.current) {
+      skipSessionHydrateRef.current = false;
+      return;
+    }
+
     loadMessages(activeSessionId);
     loadDocument(activeSessionId);
   }, [activeSessionId, loadDocument, loadMessages]);
+
+  function upsertSession(session: ChatSessionRead): void {
+    setSessions((prev) => {
+      const index = prev.findIndex((item) => item.id === session.id);
+      if (index === -1) {
+        const withNew = [session, ...prev];
+        return withNew;
+      }
+      const next = [...prev];
+      next[index] = session;
+      return next;
+    });
+  }
+
+  async function ensureActiveSessionId(): Promise<string> {
+    if (activeSessionId !== null) {
+      return activeSessionId;
+    }
+
+    const created = await createSession({});
+    upsertSession(created);
+    skipSessionHydrateRef.current = true;
+    setActiveSessionIdState(created.id);
+    setActiveSessionId(created.id);
+    return created.id;
+  }
 
   function getLayoutWidth(): number {
     const layout = layoutRef.current;
@@ -376,24 +404,14 @@ export function Workspace() {
     selectSession(sessionId, "chat");
   }
 
-  async function handleCreateSession(data: NewSessionFormData): Promise<void> {
-    setModalSubmitting(true);
-    setModalError(null);
-
-    try {
-      const created = await createSession(data);
-      setSessions((prev) => [created, ...prev]);
-      selectSession(created.id, "chat");
-      setIsModalOpen(false);
-    } catch (error) {
-      const message =
-        error instanceof ApiRequestError
-          ? error.message
-          : "Failed to create session.";
-      setModalError(message);
-    } finally {
-      setModalSubmitting(false);
-    }
+  function handleNewChat(): void {
+    setActiveSessionIdState(null);
+    clearActiveSessionId();
+    setMessages([]);
+    setCurrentDocument(null);
+    setDocumentPanelOpen(false);
+    setMessagesError(null);
+    setActiveMobileTab("chat");
   }
 
   async function handleDeleteSession(sessionId: string): Promise<void> {
@@ -440,17 +458,15 @@ export function Workspace() {
   }
 
   async function handleSendMessage(content: string): Promise<void> {
-    if (activeSessionId === null) {
-      return;
-    }
-
     setMessageSending(true);
     setMessagesError(null);
 
     try {
-      const exchange = await createMessage(activeSessionId, {
+      const sessionId = await ensureActiveSessionId();
+      const exchange = await createMessage(sessionId, {
         content,
       });
+      upsertSession(exchange.session);
       setMessages((prev) => [
         ...prev,
         exchange.user_message,
@@ -477,15 +493,13 @@ export function Workspace() {
   }
 
   async function handleUploadPdf(file: File): Promise<void> {
-    if (activeSessionId === null) {
-      return;
-    }
-
     setDocumentUploading(true);
     setMessagesError(null);
 
     try {
-      const result = await uploadDocument(activeSessionId, file);
+      const sessionId = await ensureActiveSessionId();
+      const result = await uploadDocument(sessionId, file);
+      upsertSession(result.session);
       setCurrentDocument(result.document);
       setDocumentPanelOpen(true);
       setMessages((prev) => [
@@ -587,7 +601,7 @@ export function Workspace() {
           <span className="workspace-session-context">
             {activeSession !== null
               ? `${activeSession.title} · ${formatTone(activeSession.tutor_tone)} · ${formatAvatar(activeSession.tutor_avatar)}`
-              : "Create a session to begin"}
+              : "Ask a question or upload a file to begin"}
           </span>
         </div>
         <button type="button" className="btn-secondary" onClick={logout}>
@@ -617,10 +631,7 @@ export function Workspace() {
           onDeleteSession={(sessionId) => {
             void handleDeleteSession(sessionId);
           }}
-          onNewSession={() => {
-            setModalError(null);
-            setIsModalOpen(true);
-          }}
+          onNewSession={handleNewChat}
           onRetry={() => {
             loadSessions();
           }}
@@ -723,14 +734,6 @@ export function Workspace() {
           )}
         />
       </div>
-
-      <NewSessionModal
-        isOpen={isModalOpen}
-        isSubmitting={modalSubmitting}
-        error={modalError}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateSession}
-      />
     </div>
   );
 }

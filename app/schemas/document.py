@@ -5,6 +5,7 @@ import uuid
 from pydantic import BaseModel
 
 from app.schemas.chat_message import ChatMessageRead
+from app.schemas.chat_session import ChatSessionRead
 
 
 class DocumentAnnotationRead(BaseModel):
@@ -30,3 +31,4 @@ class DocumentUploadRead(BaseModel):
     document: DocumentRead
     user_message: ChatMessageRead
     assistant_message: ChatMessageRead
+    session: ChatSessionRead

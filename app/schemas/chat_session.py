@@ -4,11 +4,12 @@ import uuid
 
 from pydantic import BaseModel
 
+from app.ai.session_title import DEFAULT_SESSION_TITLE
 from app.db.enums import ChatSessionStatus, TutorAvatar, TutorTone
 
 
 class ChatSessionCreate(BaseModel):
-    title: str
+    title: str = DEFAULT_SESSION_TITLE
     tutor_tone: TutorTone = TutorTone.SOCRATIC
     tutor_avatar: TutorAvatar = TutorAvatar.FEMALE
     status: ChatSessionStatus = ChatSessionStatus.ACTIVE

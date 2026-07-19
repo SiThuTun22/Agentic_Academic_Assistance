@@ -8,7 +8,9 @@ from app.ai.tutor import generate_tutor_reply
 from app.db.models import ChatMessage, ChatSession, MessageRole, SessionDocument
 from app.lib.config import get_vision_max_pdf_pages
 from app.repositories.chat_message import ChatMessageRepo
+from app.repositories.chat_session import ChatSessionRepo
 from app.repositories.session_document import SessionDocumentRepo
+from app.services.chat.session_title import maybe_autotitle_session
 from app.services.documents.annotations import annotations_to_json, build_annotations
 from app.services.documents.context import build_document_context
 from app.services.documents.pdf_extract import extract_pdf_words, render_pdf_pages_as_png
@@ -21,6 +23,7 @@ class DocumentUploadResult:
     document: SessionDocument
     user_message: ChatMessage
     assistant_message: ChatMessage
+    chat_session: ChatSession
 
 
 def is_pdf_filename(filename: str) -> bool:
@@ -38,6 +41,23 @@ def is_image_filename(filename: str) -> bool:
     return False
 
 
+def _title_source_for_upload(
+    filename: str,
+    extracted_text: str,
+    vision_description: str,
+) -> str:
+    sections: list[str] = []
+    sections.append(filename)
+    vision_part = vision_description.strip()
+    if len(vision_part) > 0:
+        sections.append(vision_part[:500])
+    text_part = extracted_text.strip()
+    if len(text_part) > 0:
+        sections.append(text_part[:500])
+    joined = '\n'.join(sections)
+    return joined
+
+
 async def process_document_upload(
     chat_session: ChatSession,
     session_id: uuid.UUID,
@@ -45,6 +65,7 @@ async def process_document_upload(
     file_bytes: bytes,
     session_document_repo: SessionDocumentRepo,
     chat_message_repo: ChatMessageRepo,
+    chat_session_repo: ChatSessionRepo,
 ) -> DocumentUploadResult:
     document_id = uuid.uuid4()
     storage_path = save_uploaded_file(session_id, document_id, filename, file_bytes)
@@ -93,9 +114,17 @@ async def process_document_upload(
     assistant_message = ChatMessage(chat_session_id=session_id, role=MessageRole.ASSISTANT, content=tutor_text)
     created_assistant = await chat_message_repo.add(assistant_message)
 
+    title_source = _title_source_for_upload(filename, extracted_text, vision_description)
+    updated_session = await maybe_autotitle_session(
+        chat_session,
+        title_source,
+        chat_session_repo,
+    )
+
     result = DocumentUploadResult(
         document=created_document,
         user_message=created_user,
         assistant_message=created_assistant,
+        chat_session=updated_session,
     )
     return result

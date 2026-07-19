@@ -68,7 +68,7 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
   }, [props.messages, props.isSending, props.isUploading, pendingUserContent]);
 
   async function submitMessage(content: string): Promise<void> {
-    if (content.length === 0 || props.sessionId === null || isBusy) {
+    if (content.length === 0 || isBusy) {
       return;
     }
 
@@ -141,96 +141,92 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
         <h2 className="column-title">Tutor chat</h2>
       </div>
 
-      {props.sessionId === null ? (
-        <p className="column-empty">Select or create a session first.</p>
-      ) : (
-        <>
-          <div
-            className="messages-container compact"
-            role="log"
-            aria-live="polite"
-            aria-relevant="additions"
-          >
-            {props.isLoading && (
-              <p className="column-status">Loading messages…</p>
-            )}
+      <div
+        className="messages-container compact"
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
+        {props.isLoading && props.sessionId !== null && (
+          <p className="column-status">Loading messages…</p>
+        )}
 
-            {showEmptyState && (
-              <p className="column-empty">
-                Ask a question or upload a PDF/image to get started.
-              </p>
-            )}
+        {showEmptyState && (
+          <p className="column-empty">
+            Ask a question or upload a PDF/image to start.
+          </p>
+        )}
 
-            {props.messages.map((message) => (
-              <TutorMessageBubble key={message.id} message={message} />
-            ))}
+        {props.messages.map((message) => (
+          <TutorMessageBubble key={message.id} message={message} />
+        ))}
 
-            {pendingUserContent !== null && (
-              <PendingUserBubble content={pendingUserContent} />
-            )}
+        {pendingUserContent !== null && (
+          <PendingUserBubble content={pendingUserContent} />
+        )}
 
-            {isBusy && <TutorThinkingIndicator mode={thinkingMode} />}
+        {isBusy && <TutorThinkingIndicator mode={thinkingMode} />}
 
-            <div ref={messagesEndRef} />
-          </div>
+        <div ref={messagesEndRef} />
+      </div>
 
-          {props.error !== null && (
-            <div className="column-error chat-error">
-              <p className="form-error" role="alert">
-                {props.error}
-              </p>
-              <button
-                type="button"
-                className="btn-secondary btn-retry"
-                onClick={props.onRetryMessages}
-              >
-                Retry
-              </button>
-            </div>
+      {props.error !== null && (
+        <div className="column-error chat-error">
+          <p className="form-error" role="alert">
+            {props.error}
+          </p>
+          {props.sessionId !== null && (
+            <button
+              type="button"
+              className="btn-secondary btn-retry"
+              onClick={props.onRetryMessages}
+            >
+              Retry
+            </button>
           )}
-
-          <form className="tutor-input-form" onSubmit={handleSubmit}>
-            <label className="sr-only" htmlFor="tutor-input">
-              Message the tutor
-            </label>
-            <textarea
-              id="tutor-input"
-              className="chat-input"
-              rows={3}
-              placeholder="Ask a question…"
-              value={inputValue}
-              onChange={(event) => setInputValue(event.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isBusy}
-            />
-            <div className="tutor-input-actions">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
-                className="sr-only"
-                onChange={handleFileChange}
-                disabled={isBusy}
-              />
-              <button
-                type="button"
-                className="btn-secondary btn-attach"
-                disabled={isBusy}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {props.isUploading ? "Uploading…" : "Upload file"}
-              </button>
-              <button
-                type="submit"
-                className="btn-send"
-                disabled={isBusy || inputValue.trim().length === 0}
-              >
-                {props.isSending ? "Tutor is thinking…" : "Send"}
-              </button>
-            </div>
-          </form>
-        </>
+        </div>
       )}
+
+      <form className="tutor-input-form" onSubmit={handleSubmit}>
+        <label className="sr-only" htmlFor="tutor-input">
+          Message the tutor
+        </label>
+        <textarea
+          id="tutor-input"
+          className="chat-input"
+          rows={3}
+          placeholder="Ask a question…"
+          value={inputValue}
+          onChange={(event) => setInputValue(event.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isBusy}
+        />
+        <div className="tutor-input-actions">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
+            className="sr-only"
+            onChange={handleFileChange}
+            disabled={isBusy}
+          />
+          <button
+            type="button"
+            className="btn-secondary btn-attach"
+            disabled={isBusy}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {props.isUploading ? "Uploading…" : "Upload file"}
+          </button>
+          <button
+            type="submit"
+            className="btn-send"
+            disabled={isBusy || inputValue.trim().length === 0}
+          >
+            {props.isSending ? "Tutor is thinking…" : "Send"}
+          </button>
+        </div>
+      </form>
     </section>
   );
 }

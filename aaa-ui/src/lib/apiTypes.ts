@@ -27,7 +27,7 @@ export interface RegisterRequest {
 }
 
 export interface ChatSessionCreate {
-  title: string;
+  title?: string;
   tutor_tone?: TutorTone;
   tutor_avatar?: TutorAvatar;
   status?: ChatSessionStatus;
@@ -56,6 +56,7 @@ export interface ChatMessageRead {
 export interface ChatMessageExchangeRead {
   user_message: ChatMessageRead;
   assistant_message: ChatMessageRead;
+  session: ChatSessionRead;
 }
 
 export interface DocumentAnnotationRead {
@@ -81,6 +82,7 @@ export interface DocumentUploadRead {
   document: DocumentRead;
   user_message: ChatMessageRead;
   assistant_message: ChatMessageRead;
+  session: ChatSessionRead;
 }
 
 export interface ApiError {

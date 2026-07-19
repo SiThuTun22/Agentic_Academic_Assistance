@@ -21,7 +21,7 @@ from app.repositories import (
     provide_chat_session_repo_dep,
     provide_session_document_repo_dep,
 )
-from app.routes.mappers import raise_llm_unavailable, require_owned_session, to_document_read, to_message_read
+from app.routes.mappers import raise_llm_unavailable, require_owned_session, to_document_read, to_message_read, to_session_read
 from app.schemas import DocumentRead, DocumentUploadRead
 from app.services.documents.upload import is_image_filename, is_pdf_filename, process_document_upload
 
@@ -103,6 +103,7 @@ async def upload_document(
             file_bytes,
             session_document_repo,
             chat_message_repo,
+            chat_session_repo,
         )
     except LlmUnavailableError as error:
         raise_llm_unavailable(error)
@@ -112,10 +113,12 @@ async def upload_document(
     document_read = to_document_read(upload_result.document)
     user_read = to_message_read(upload_result.user_message)
     assistant_read = to_message_read(upload_result.assistant_message)
+    session_read = to_session_read(upload_result.chat_session)
     upload_read = DocumentUploadRead(
         document=document_read,
         user_message=user_read,
         assistant_message=assistant_read,
+        session=session_read,
     )
     return upload_read
 

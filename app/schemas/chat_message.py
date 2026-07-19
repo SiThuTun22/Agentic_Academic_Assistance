@@ -5,6 +5,7 @@ import uuid
 from pydantic import BaseModel
 
 from app.db.enums import MessageRole
+from app.schemas.chat_session import ChatSessionRead
 
 
 class ChatMessageCreate(BaseModel):
@@ -21,3 +22,4 @@ class ChatMessageRead(BaseModel):
 class ChatMessageExchangeRead(BaseModel):
     user_message: ChatMessageRead
     assistant_message: ChatMessageRead
+    session: ChatSessionRead

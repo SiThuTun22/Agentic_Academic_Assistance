@@ -6,7 +6,9 @@ from dataclasses import dataclass
 from app.ai.tutor import generate_tutor_reply
 from app.db.models import ChatMessage, ChatSession, MessageRole
 from app.repositories.chat_message import ChatMessageRepo
+from app.repositories.chat_session import ChatSessionRepo
 from app.repositories.session_document import SessionDocumentRepo
+from app.services.chat.session_title import maybe_autotitle_session
 from app.services.documents.context import build_document_context
 
 
@@ -14,6 +16,7 @@ from app.services.documents.context import build_document_context
 class MessageExchangeResult:
     user_message: ChatMessage
     assistant_message: ChatMessage
+    chat_session: ChatSession
 
 
 async def send_message_exchange(
@@ -22,6 +25,7 @@ async def send_message_exchange(
     content: str,
     chat_message_repo: ChatMessageRepo,
     session_document_repo: SessionDocumentRepo,
+    chat_session_repo: ChatSessionRepo,
 ) -> MessageExchangeResult:
     history = await chat_message_repo.get_recent_for_session(session_id)
 
@@ -43,8 +47,15 @@ async def send_message_exchange(
     assistant_message = ChatMessage(chat_session_id=session_id, role=MessageRole.ASSISTANT, content=tutor_text)
     created_assistant = await chat_message_repo.add(assistant_message)
 
+    updated_session = await maybe_autotitle_session(
+        chat_session,
+        content,
+        chat_session_repo,
+    )
+
     result = MessageExchangeResult(
         user_message=created_user,
         assistant_message=created_assistant,
+        chat_session=updated_session,
     )
     return result
