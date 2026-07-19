@@ -669,18 +669,12 @@ export function Workspace() {
 
       <div className="workspace-toolbar">
         <div className="workspace-toolbar-left">
-          <span className="workspace-user">
-            Signed in as {user?.display_name ?? user?.email}
-          </span>
           <span className="workspace-session-context">
             {activeSession !== null
               ? `${activeSession.title} · ${formatTone(activeSession.tutor_tone)} · ${formatAvatar(activeSession.tutor_avatar)}`
               : "Ask a question or upload a file to begin"}
           </span>
         </div>
-        <button type="button" className="btn-secondary" onClick={logout}>
-          Sign out
-        </button>
       </div>
 
       <MobileTabBar
@@ -701,6 +695,8 @@ export function Workspace() {
           isLoading={sessionsLoading}
           error={sessionsError}
           deletingSessionId={deletingSessionId}
+          displayName={user?.display_name ?? ""}
+          email={user?.email ?? ""}
           onSelectSession={handleSelectSession}
           onDeleteSession={(sessionId) => {
             void handleDeleteSession(sessionId);
@@ -709,6 +705,7 @@ export function Workspace() {
           onRetry={() => {
             loadSessions();
           }}
+          onLogout={logout}
           className={getMobileColumnClass(
             activeMobileTab,
             "sessions",

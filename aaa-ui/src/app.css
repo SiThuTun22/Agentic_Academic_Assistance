@@ -912,15 +912,145 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 8px 20px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  overflow: visible;
 }
 
-.workspace-user {
+.user-profile {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-start;
+  z-index: 5;
+  width: 100%;
+  min-width: 0;
+}
+
+.user-profile-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  max-width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  cursor: pointer;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition:
+    max-width 0.24s ease,
+    padding 0.24s ease,
+    gap 0.24s ease,
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+.user-profile.is-expanded .user-profile-chip,
+.user-profile.is-open .user-profile-chip {
+  max-width: 100%;
+  width: 100%;
+  padding-right: 12px;
+  gap: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.user-profile.is-open .user-profile-chip {
+  border-color: var(--color-primary);
+}
+
+.user-profile-avatar {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
   font-size: 14px;
-  color: var(--text-secondary);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.user-profile-name {
+  min-width: 0;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  transform: translateX(-6px);
+  transition:
+    opacity 0.2s ease,
+    max-width 0.24s ease,
+    transform 0.24s ease;
+}
+
+.user-profile.is-expanded .user-profile-name,
+.user-profile.is-open .user-profile-name {
+  max-width: 14rem;
+  flex: 1;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.user-profile-menu {
+  position: fixed;
+  min-width: 140px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+  z-index: 1100;
+}
+
+.user-profile-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.user-profile-menu-item:hover {
+  background: var(--bg-highlight);
+}
+
+.user-profile-chip:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.user-profile--compact {
+  width: auto;
+  justify-content: center;
+}
+
+.user-profile--compact.is-expanded .user-profile-chip,
+.user-profile--compact.is-open .user-profile-chip {
+  position: fixed;
+  z-index: 1000;
+  width: auto;
+  max-width: min(280px, 45vw);
 }
 
 .workspace-layout {
@@ -1144,19 +1274,52 @@ body.is-resizing-columns .session-sidebar {
 }
 
 .session-sidebar {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.session-sidebar-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.session-sidebar-footer {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  z-index: 6;
+  overflow: visible;
 }
 
 .session-sidebar--collapsed {
   width: 100%;
   min-width: 0;
-  align-items: center;
-  padding: 12px 8px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  align-items: stretch;
+  padding: 12px 8px 0;
+  overflow: hidden;
   /* Above resize-handle (z-index: 2) so expanded titles cover the column line */
   z-index: 20;
+}
+
+.session-sidebar--collapsed .session-sidebar-main {
+  align-items: center;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+.session-sidebar--collapsed .session-sidebar-footer {
+  padding: 8px;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--border);
 }
 
 .sidebar-rail-btn {
@@ -1183,7 +1346,8 @@ body.is-resizing-columns .session-sidebar {
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  flex: 1;
+  align-items: center;
+  flex: 0 0 auto;
   min-height: 0;
   overflow: visible;
 }
@@ -1574,7 +1738,9 @@ body.is-resizing-columns .session-sidebar {
   .document-viewer-panel,
   .btn-document-edge-toggle,
   .session-rail-card,
-  .session-rail-title {
+  .session-rail-title,
+  .user-profile-chip,
+  .user-profile-name {
     transition: none;
     animation: none;
   }
