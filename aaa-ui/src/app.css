@@ -181,8 +181,13 @@ body {
   color: var(--text-primary);
 }
 
-.brand-icon {
-  font-size: 20px;
+.brand-logo {
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 6px;
 }
 
 .header-controls {

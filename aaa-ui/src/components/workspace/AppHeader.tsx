@@ -14,7 +14,13 @@ export function AppHeader(props: AppHeaderProps) {
   return (
     <header className="app-header">
       <div className="app-brand">
-        <span className="brand-icon" aria-hidden="true">🎓</span>
+        <img
+          className="brand-logo"
+          src="/brand-logo.jpg"
+          alt=""
+          width={28}
+          height={28}
+        />
         <span className="brand-name">Agentic Academic Assistant</span>
       </div>
 
