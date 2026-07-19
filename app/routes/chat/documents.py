@@ -23,7 +23,7 @@ from app.repositories import (
 )
 from app.routes.mappers import raise_llm_unavailable, require_owned_session, to_document_read, to_message_read
 from app.schemas import DocumentRead, DocumentUploadRead
-from app.services.documents.upload import process_document_upload
+from app.services.documents.upload import is_image_filename, is_pdf_filename, process_document_upload
 
 
 @dataclass
@@ -86,8 +86,10 @@ async def upload_document(
 
     file = data.file
     filename = file.filename or 'document.pdf'
-    if not filename.lower().endswith('.pdf'):
-        raise ServiceUnavailableException(detail='Only PDF files are supported.')
+    if not is_pdf_filename(filename) and not is_image_filename(filename):
+        raise ServiceUnavailableException(
+            detail='Only PDF and image files (png, jpg, jpeg, webp) are supported.',
+        )
 
     file_bytes = await file.read()
     if len(file_bytes) == 0:
@@ -104,6 +106,8 @@ async def upload_document(
         )
     except LlmUnavailableError as error:
         raise_llm_unavailable(error)
+    except ValueError as error:
+        raise ServiceUnavailableException(detail=str(error)) from error
 
     document_read = to_document_read(upload_result.document)
     user_read = to_message_read(upload_result.user_message)

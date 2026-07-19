@@ -60,11 +60,17 @@ def to_document_read(document: SessionDocument) -> DocumentRead:
         annotations.append(annotation_read)
 
     file_url = f'/api/chat-sessions/{document.chat_session_id}/documents/{document.id}/file'
+    content_type = 'pdf'
+    lowered = document.filename.lower()
+    if lowered.endswith('.png') or lowered.endswith('.jpg') or lowered.endswith('.jpeg') or lowered.endswith('.webp'):
+        content_type = 'image'
+
     document_read = DocumentRead(
         id=document.id,
         chat_session_id=document.chat_session_id,
         filename=document.filename,
         file_url=file_url,
+        content_type=content_type,
         annotations=annotations,
     )
     return document_read

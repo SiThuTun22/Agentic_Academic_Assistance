@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 
 from advanced_alchemy.filters import LimitOffset
-from litestar import Request, Router, get, post
+from litestar import Request, Router, delete, get, post
 from litestar.exceptions import NotFoundException
 from litestar.params import Parameter
 from litestar.security.jwt import Token
@@ -12,6 +12,7 @@ from app.db.models import ChatSession, User
 from app.repositories import ChatSessionRepo, provide_chat_session_repo_dep
 from app.routes.mappers import to_session_read
 from app.schemas import ChatSessionCreate, ChatSessionRead
+from app.services.documents.storage import delete_session_uploads
 
 
 @get('/')
@@ -64,8 +65,22 @@ async def create_chat_session(
     return session_read
 
 
+@delete('/{session_id:uuid}', status_code=204)
+async def delete_chat_session(
+    request: Request[User, Token, None],
+    chat_session_repo: ChatSessionRepo,
+    session_id: uuid.UUID,
+) -> None:
+    user = request.user
+    chat_session = await chat_session_repo.get_one_or_none(id=session_id, owner_id=user.id)
+    if chat_session is None:
+        raise NotFoundException(detail=f'Chat session {session_id} not found')
+    delete_session_uploads(session_id)
+    await chat_session_repo.delete(session_id)
+
+
 chat_sessions_router = Router(
     path='/api/chat-sessions',
-    route_handlers=[list_chat_sessions, get_chat_session, create_chat_session],
+    route_handlers=[list_chat_sessions, get_chat_session, create_chat_session, delete_chat_session],
     dependencies={'chat_session_repo': provide_chat_session_repo_dep},
 )

@@ -7,7 +7,7 @@ from app.ai.tutor import generate_tutor_reply
 from app.db.models import ChatMessage, ChatSession, MessageRole
 from app.repositories.chat_message import ChatMessageRepo
 from app.repositories.session_document import SessionDocumentRepo
-from app.services.documents.context import truncate_document_context
+from app.services.documents.context import build_document_context
 
 
 @dataclass
@@ -31,7 +31,12 @@ async def send_message_exchange(
     latest_document = await session_document_repo.get_latest_for_session(session_id)
     document_context = None
     if latest_document is not None:
-        document_context = truncate_document_context(latest_document.extracted_text)
+        document_context = build_document_context(
+            latest_document.extracted_text,
+            latest_document.vision_description,
+        )
+        if len(document_context) == 0:
+            document_context = None
 
     tutor_text = await generate_tutor_reply(chat_session, history, content, document_context)
 

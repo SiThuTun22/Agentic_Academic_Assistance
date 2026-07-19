@@ -1,3 +1,4 @@
+import { useRef, useState, type FocusEvent, type MouseEvent } from "react";
 import type { ChatSessionRead } from "../../lib/apiTypes";
 
 interface SessionSidebarProps {
@@ -6,10 +7,18 @@ interface SessionSidebarProps {
   collapsed: boolean;
   isLoading: boolean;
   error: string | null;
+  deletingSessionId: string | null;
   onSelectSession: (sessionId: string) => void;
+  onDeleteSession: (sessionId: string) => void;
   onNewSession: () => void;
   onRetry: () => void;
   className?: string;
+}
+
+interface RailExpandState {
+  sessionId: string;
+  top: number;
+  left: number;
 }
 
 function sessionInitial(title: string): string {
@@ -20,7 +29,28 @@ function sessionInitial(title: string): string {
   return trimmed.charAt(0).toUpperCase();
 }
 
+function TrashIcon() {
+  return (
+    <svg
+      className="session-trash-icon"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        fill="currentColor"
+        d="M6 7h12v2H6V7zm2 3h2v8H8v-8zm3 0h2v8h-2v-8zm3 0h2v8h-2v-8zM9 4h6l1 2h4v2H4V6h4l1-2z"
+      />
+    </svg>
+  );
+}
+
 export function SessionSidebar(props: SessionSidebarProps) {
+  const [railExpand, setRailExpand] = useState<RailExpandState | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
+
   const isEmpty = !props.isLoading && props.sessions.length === 0;
   const newSessionClass = isEmpty
     ? "btn-new-session btn-new-session-prominent"
@@ -32,6 +62,38 @@ export function SessionSidebar(props: SessionSidebarProps) {
   }
   if (props.className) {
     columnClass = `${columnClass} ${props.className}`;
+  }
+
+  function clearCloseTimer(): void {
+    if (closeTimerRef.current === null) {
+      return;
+    }
+    window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = null;
+  }
+
+  function openRailExpand(sessionId: string, element: HTMLElement): void {
+    clearCloseTimer();
+    const rect = element.getBoundingClientRect();
+    const next: RailExpandState = {
+      sessionId: sessionId,
+      top: rect.top,
+      left: rect.left,
+    };
+    setRailExpand(next);
+  }
+
+  function scheduleCloseRailExpand(): void {
+    clearCloseTimer();
+    closeTimerRef.current = window.setTimeout(() => {
+      setRailExpand(null);
+      closeTimerRef.current = null;
+    }, 120);
+  }
+
+  function closeRailExpandNow(): void {
+    clearCloseTimer();
+    setRailExpand(null);
   }
 
   if (props.collapsed) {
@@ -50,21 +112,86 @@ export function SessionSidebar(props: SessionSidebarProps) {
         <ul className="session-rail-list">
           {props.sessions.map((session) => {
             const isActive = session.id === props.activeSessionId;
-            const itemClass = isActive
-              ? "sidebar-rail-item active"
-              : "sidebar-rail-item";
+            const isDeleting = session.id === props.deletingSessionId;
+            const isExpanded =
+              railExpand !== null && railExpand.sessionId === session.id;
+
+            let rowClass = "session-rail-row";
+            if (isActive) {
+              rowClass = `${rowClass} active`;
+            }
+            if (isExpanded) {
+              rowClass = `${rowClass} is-expanded`;
+            }
+
+            let cardClass = "session-rail-card";
+            if (isActive) {
+              cardClass = `${cardClass} active`;
+            }
+            if (isExpanded) {
+              cardClass = `${cardClass} is-expanded`;
+            }
+
+            let cardStyle: { top?: number; left?: number } | undefined;
+            if (isExpanded && railExpand !== null) {
+              cardStyle = {
+                top: railExpand.top,
+                left: railExpand.left,
+              };
+            }
 
             return (
-              <li key={session.id}>
-                <button
-                  type="button"
-                  className={itemClass}
-                  title={session.title}
-                  aria-label={session.title}
-                  onClick={() => props.onSelectSession(session.id)}
+              <li
+                key={session.id}
+                className={rowClass}
+                onMouseEnter={(event: MouseEvent<HTMLLIElement>) => {
+                  openRailExpand(session.id, event.currentTarget);
+                }}
+                onMouseLeave={scheduleCloseRailExpand}
+                onFocus={(event: FocusEvent<HTMLLIElement>) => {
+                  openRailExpand(session.id, event.currentTarget);
+                }}
+                onBlur={(event: FocusEvent<HTMLLIElement>) => {
+                  const next = event.relatedTarget;
+                  if (next instanceof Node && event.currentTarget.contains(next)) {
+                    return;
+                  }
+                  scheduleCloseRailExpand();
+                }}
+              >
+                <div
+                  className={cardClass}
+                  style={cardStyle}
+                  onMouseEnter={clearCloseTimer}
+                  onMouseLeave={scheduleCloseRailExpand}
                 >
-                  {sessionInitial(session.title)}
-                </button>
+                  <button
+                    type="button"
+                    className="session-rail-select"
+                    title={session.title}
+                    aria-label={session.title}
+                    disabled={isDeleting}
+                    onClick={() => props.onSelectSession(session.id)}
+                  >
+                    <span className="session-rail-initial" aria-hidden="true">
+                      {sessionInitial(session.title)}
+                    </span>
+                    <span className="session-rail-title">{session.title}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="session-delete-btn session-delete-btn--rail"
+                    title={`Delete ${session.title}`}
+                    aria-label={`Delete ${session.title}`}
+                    disabled={isDeleting}
+                    onClick={() => {
+                      props.onDeleteSession(session.id);
+                      closeRailExpandNow();
+                    }}
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
               </li>
             );
           })}
@@ -111,19 +238,33 @@ export function SessionSidebar(props: SessionSidebarProps) {
       <ul className="session-list">
         {props.sessions.map((session) => {
           const isActive = session.id === props.activeSessionId;
+          const isDeleting = session.id === props.deletingSessionId;
           const itemClass = isActive
             ? "session-item active card"
             : "session-item card";
 
           return (
-            <li key={session.id}>
-              <button
-                type="button"
-                className={itemClass}
-                onClick={() => props.onSelectSession(session.id)}
-              >
-                <span className="session-title">{session.title}</span>
-              </button>
+            <li key={session.id} className="session-row">
+              <div className={itemClass}>
+                <button
+                  type="button"
+                  className="session-select-btn"
+                  disabled={isDeleting}
+                  onClick={() => props.onSelectSession(session.id)}
+                >
+                  <span className="session-title">{session.title}</span>
+                </button>
+                <button
+                  type="button"
+                  className="session-delete-btn"
+                  title={`Delete ${session.title}`}
+                  aria-label={`Delete ${session.title}`}
+                  disabled={isDeleting}
+                  onClick={() => props.onDeleteSession(session.id)}
+                >
+                  <TrashIcon />
+                </button>
+              </div>
             </li>
           );
         })}

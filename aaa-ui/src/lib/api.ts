@@ -121,6 +121,12 @@ export function createSession(
   });
 }
 
+export function deleteSession(sessionId: string): Promise<void> {
+  return request<void>(`/api/chat-sessions/${sessionId}`, {
+    method: "DELETE",
+  });
+}
+
 export function getLatestDocument(
   sessionId: string,
 ): Promise<DocumentRead | null> {
@@ -168,6 +174,32 @@ export async function fetchDocumentFile(fileUrl: string): Promise<ArrayBuffer> {
 
   const buffer = await response.arrayBuffer();
   return buffer;
+}
+
+export async function fetchDocumentBlobUrl(fileUrl: string): Promise<string> {
+  const headers = new Headers();
+  const token = getToken();
+  if (token !== null) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(fileUrl, { headers });
+  } catch {
+    throw new NetworkError();
+  }
+
+  if (!response.ok) {
+    throw new ApiRequestError(
+      `Failed to load document (${response.status})`,
+      response.status,
+    );
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  return objectUrl;
 }
 
 export function listMessages(

@@ -73,6 +73,7 @@ export interface DocumentRead {
   chat_session_id: string;
   filename: string;
   file_url: string;
+  content_type: "pdf" | "image" | string;
   annotations: DocumentAnnotationRead[];
 }
 

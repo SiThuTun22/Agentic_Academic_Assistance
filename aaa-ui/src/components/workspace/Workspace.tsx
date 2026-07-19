@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ApiRequestError,
   checkHealth,
   createMessage,
   createSession,
+  deleteSession,
   getLatestDocument,
   listMessages,
   listSessions,
@@ -17,12 +18,28 @@ import type {
 import { useAuth } from "../../context/AuthContext";
 import type { ThemeMode } from "../../types";
 import {
+  CHAT_MIN_CHAT_WIDTH,
+  CHAT_MIN_SESSIONS_WIDTH,
+  DOCUMENT_MIN_CHAT_WIDTH,
+  DOCUMENT_MIN_DOCUMENT_WIDTH,
+  DOCUMENT_MIN_SESSIONS_WIDTH,
+  RESIZE_HANDLE_WIDTH,
+  SESSIONS_EXPANDED_MIN_WIDTH,
+  clearActiveSessionId,
   getActiveSessionId,
+  getDefaultChatColumnWidths,
+  getDefaultDocumentColumnWidths,
   getInitialThemeMode,
+  getStoredChatColumnWidths,
+  getStoredDocumentColumnWidths,
   getStoredMobileTab,
   setActiveSessionId,
+  setStoredChatColumnWidths,
+  setStoredDocumentColumnWidths,
   setStoredMobileTab,
   setStoredThemeMode,
+  type ChatColumnWidths,
+  type DocumentColumnWidths,
   type LayoutMode,
   type MobileTab,
 } from "../../lib/workspaceStorage";
@@ -30,6 +47,7 @@ import { AppHeader } from "./AppHeader";
 import { DocumentViewerPanel } from "./DocumentViewerPanel";
 import { MobileTabBar } from "./MobileTabBar";
 import { NewSessionModal, type NewSessionFormData } from "./NewSessionModal";
+import { ResizeHandle } from "./ResizeHandle";
 import { SessionSidebar } from "./SessionSidebar";
 import { TutorChatPanel } from "./TutorChatPanel";
 
@@ -61,8 +79,20 @@ function getMobileColumnClass(
   return "hidden-mobile";
 }
 
+function clamp(value: number, min: number, max: number): number {
+  if (value < min) {
+    return min;
+  }
+  if (value > max) {
+    return max;
+  }
+  return value;
+}
+
 export function Workspace() {
   const { user, logout } = useAuth();
+  const layoutRef = useRef<HTMLDivElement | null>(null);
+
   const [themeMode, setThemeMode] = useState<ThemeMode>(() =>
     getInitialThemeMode(),
   );
@@ -77,6 +107,13 @@ export function Workspace() {
   );
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("chat");
 
+  const [chatWidths, setChatWidths] = useState<ChatColumnWidths>(() =>
+    getStoredChatColumnWidths(),
+  );
+  const [documentWidths, setDocumentWidths] = useState<DocumentColumnWidths>(
+    () => getStoredDocumentColumnWidths(),
+  );
+
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionsError, setSessionsError] = useState<string | null>(null);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -87,6 +124,9 @@ export function Workspace() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
+    null,
+  );
 
   const [activeMobileTab, setActiveMobileTabState] = useState<MobileTab>(() =>
     getStoredMobileTab(),
@@ -171,6 +211,14 @@ export function Workspace() {
   }, [themeMode]);
 
   useEffect(() => {
+    setStoredChatColumnWidths(chatWidths);
+  }, [chatWidths]);
+
+  useEffect(() => {
+    setStoredDocumentColumnWidths(documentWidths);
+  }, [documentWidths]);
+
+  useEffect(() => {
     checkHealth()
       .then(() => {
         setBackendUnavailable(false);
@@ -211,6 +259,119 @@ export function Workspace() {
     loadDocument(activeSessionId);
   }, [activeSessionId, loadDocument, loadMessages]);
 
+  function getLayoutWidth(): number {
+    const layout = layoutRef.current;
+    if (layout === null) {
+      return 0;
+    }
+    return layout.clientWidth;
+  }
+
+  function handleChatSessionsDrag(deltaX: number): void {
+    const layoutWidth = getLayoutWidth();
+    if (layoutWidth <= 0) {
+      return;
+    }
+
+    const maxSessions =
+      layoutWidth - RESIZE_HANDLE_WIDTH - CHAT_MIN_CHAT_WIDTH;
+    const nextSessions = clamp(
+      chatWidths.sessions + deltaX,
+      CHAT_MIN_SESSIONS_WIDTH,
+      maxSessions,
+    );
+    const next: ChatColumnWidths = {
+      sessions: nextSessions,
+    };
+    setChatWidths(next);
+  }
+
+  function resetChatSessionsWidth(): void {
+    setChatWidths(getDefaultChatColumnWidths());
+  }
+
+  function handleDocumentSessionsDrag(deltaX: number): void {
+    const layoutWidth = getLayoutWidth();
+    if (layoutWidth <= 0) {
+      return;
+    }
+
+    const maxSessions =
+      layoutWidth -
+      RESIZE_HANDLE_WIDTH * 2 -
+      DOCUMENT_MIN_DOCUMENT_WIDTH -
+      DOCUMENT_MIN_CHAT_WIDTH;
+    const nextSessions = clamp(
+      documentWidths.sessions + deltaX,
+      DOCUMENT_MIN_SESSIONS_WIDTH,
+      maxSessions,
+    );
+    const next: DocumentColumnWidths = {
+      sessions: nextSessions,
+      document: documentWidths.document,
+    };
+    setDocumentWidths(next);
+  }
+
+  function resetDocumentSessionsWidth(): void {
+    const defaults = getDefaultDocumentColumnWidths();
+    const next: DocumentColumnWidths = {
+      sessions: defaults.sessions,
+      document: documentWidths.document,
+    };
+    setDocumentWidths(next);
+  }
+
+  function handleDocumentChatDrag(deltaX: number): void {
+    const layoutWidth = getLayoutWidth();
+    if (layoutWidth <= 0) {
+      return;
+    }
+
+    const maxDocument =
+      layoutWidth -
+      documentWidths.sessions -
+      RESIZE_HANDLE_WIDTH * 2 -
+      DOCUMENT_MIN_CHAT_WIDTH;
+    const nextDocument = clamp(
+      documentWidths.document + deltaX,
+      DOCUMENT_MIN_DOCUMENT_WIDTH,
+      maxDocument,
+    );
+    const next: DocumentColumnWidths = {
+      sessions: documentWidths.sessions,
+      document: nextDocument,
+    };
+    setDocumentWidths(next);
+  }
+
+  function resetDocumentChatWidth(): void {
+    const layoutWidth = getLayoutWidth();
+    const defaults = getDefaultDocumentColumnWidths();
+    if (layoutWidth <= 0) {
+      const next: DocumentColumnWidths = {
+        sessions: documentWidths.sessions,
+        document: defaults.document,
+      };
+      setDocumentWidths(next);
+      return;
+    }
+
+    const available =
+      layoutWidth - documentWidths.sessions - RESIZE_HANDLE_WIDTH * 2;
+    const half = Math.floor(available / 2);
+    const nextDocument = clamp(
+      half,
+      DOCUMENT_MIN_DOCUMENT_WIDTH,
+      available - DOCUMENT_MIN_CHAT_WIDTH,
+    );
+    const next: DocumentColumnWidths = {
+      sessions: documentWidths.sessions,
+      document: nextDocument,
+    };
+    setDocumentWidths(next);
+  }
+
   function handleSelectSession(sessionId: string): void {
     selectSession(sessionId, "chat");
   }
@@ -232,6 +393,49 @@ export function Workspace() {
       setModalError(message);
     } finally {
       setModalSubmitting(false);
+    }
+  }
+
+  async function handleDeleteSession(sessionId: string): Promise<void> {
+    const session = sessions.find((item) => item.id === sessionId);
+    const title = session?.title ?? "this session";
+    const confirmed = window.confirm(
+      `Delete "${title}"? Messages and uploaded PDFs for this chat will be removed.`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingSessionId(sessionId);
+    setSessionsError(null);
+
+    try {
+      await deleteSession(sessionId);
+      const remaining = sessions.filter((item) => item.id !== sessionId);
+      setSessions(remaining);
+
+      if (activeSessionId !== sessionId) {
+        return;
+      }
+
+      if (remaining.length === 0) {
+        setActiveSessionIdState(null);
+        clearActiveSessionId();
+        setMessages([]);
+        setCurrentDocument(null);
+        setLayoutMode("chat");
+        return;
+      }
+
+      selectSession(remaining[0].id, "chat");
+    } catch (error) {
+      const message =
+        error instanceof ApiRequestError
+          ? error.message
+          : "Failed to delete session.";
+      setSessionsError(message);
+    } finally {
+      setDeletingSessionId(null);
     }
   }
 
@@ -291,7 +495,7 @@ export function Workspace() {
       ]);
       setActiveMobileTab("document");
     } catch (error) {
-      let message = "Failed to upload PDF.";
+      let message = "Failed to upload file.";
       if (error instanceof ApiRequestError) {
         if (error.status === 503) {
           message = error.message || "Local AI (Ollama) is not running.";
@@ -310,6 +514,17 @@ export function Workspace() {
   let layoutClass = "workspace-layout workspace-layout--chat";
   if (layoutMode === "document") {
     layoutClass = "workspace-layout workspace-layout--document";
+  }
+
+  let sessionsColumnWidth = chatWidths.sessions;
+  if (layoutMode === "document") {
+    sessionsColumnWidth = documentWidths.sessions;
+  }
+  const sessionsCollapsed = sessionsColumnWidth < SESSIONS_EXPANDED_MIN_WIDTH;
+
+  let gridTemplateColumns = `${chatWidths.sessions}px ${RESIZE_HANDLE_WIDTH}px minmax(${CHAT_MIN_CHAT_WIDTH}px, 1fr)`;
+  if (layoutMode === "document") {
+    gridTemplateColumns = `${documentWidths.sessions}px ${RESIZE_HANDLE_WIDTH}px ${documentWidths.document}px ${RESIZE_HANDLE_WIDTH}px minmax(${DOCUMENT_MIN_CHAT_WIDTH}px, 1fr)`;
   }
 
   return (
@@ -351,14 +566,22 @@ export function Workspace() {
         onTabChange={setActiveMobileTab}
       />
 
-      <div className={layoutClass}>
+      <div
+        ref={layoutRef}
+        className={layoutClass}
+        style={{ gridTemplateColumns }}
+      >
         <SessionSidebar
           sessions={sessions}
           activeSessionId={activeSessionId}
-          collapsed={layoutMode === "document"}
+          collapsed={sessionsCollapsed}
           isLoading={sessionsLoading}
           error={sessionsError}
+          deletingSessionId={deletingSessionId}
           onSelectSession={handleSelectSession}
+          onDeleteSession={(sessionId) => {
+            void handleDeleteSession(sessionId);
+          }}
           onNewSession={() => {
             setModalError(null);
             setIsModalOpen(true);
@@ -373,6 +596,22 @@ export function Workspace() {
           )}
         />
 
+        {layoutMode === "chat" && (
+          <ResizeHandle
+            ariaLabel="Resize sessions and chat columns"
+            onDrag={handleChatSessionsDrag}
+            onReset={resetChatSessionsWidth}
+          />
+        )}
+
+        {layoutMode === "document" && (
+          <ResizeHandle
+            ariaLabel="Resize sessions and document columns"
+            onDrag={handleDocumentSessionsDrag}
+            onReset={resetDocumentSessionsWidth}
+          />
+        )}
+
         {layoutMode === "document" && (
           <DocumentViewerPanel
             document={currentDocument}
@@ -381,6 +620,14 @@ export function Workspace() {
               "document",
               layoutMode,
             )}
+          />
+        )}
+
+        {layoutMode === "document" && (
+          <ResizeHandle
+            ariaLabel="Resize document and chat columns"
+            onDrag={handleDocumentChatDrag}
+            onReset={resetDocumentChatWidth}
           />
         )}
 

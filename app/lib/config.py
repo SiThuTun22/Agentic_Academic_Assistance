@@ -13,6 +13,9 @@ DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434'
 DEFAULT_OLLAMA_MODEL = 'qwen3:8b'
 DEFAULT_OLLAMA_TIMEOUT_SECONDS = 120
 DEFAULT_OLLAMA_MAX_TOKENS = 384
+DEFAULT_GITHUB_MODELS_BASE_URL = 'https://models.github.ai/inference'
+DEFAULT_GITHUB_MODELS_MODEL = 'gpt-4o-mini'
+DEFAULT_VISION_MAX_PDF_PAGES = 5
 APP_VERSION = '0.1.0'
 MIGRATION_PATH = 'migrations'
 _env_path = Path('.env')
@@ -49,6 +52,32 @@ def get_ollama_max_tokens() -> int:
     raw = os.environ.get('OLLAMA_MAX_TOKENS', str(DEFAULT_OLLAMA_MAX_TOKENS))
     max_tokens = int(raw)
     return max_tokens
+
+
+def get_github_token() -> str | None:
+    token = os.environ.get('GITHUB_TOKEN')
+    if token is not None and len(token.strip()) > 0:
+        return token.strip()
+    models_token = os.environ.get('GITHUB_MODELS_TOKEN')
+    if models_token is not None and len(models_token.strip()) > 0:
+        return models_token.strip()
+    return None
+
+
+def get_github_models_base_url() -> str:
+    base_url = os.environ.get('GITHUB_MODELS_BASE_URL', DEFAULT_GITHUB_MODELS_BASE_URL)
+    return base_url
+
+
+def get_github_models_model() -> str:
+    model = os.environ.get('GITHUB_MODELS_MODEL', DEFAULT_GITHUB_MODELS_MODEL)
+    return model
+
+
+def get_vision_max_pdf_pages() -> int:
+    raw = os.environ.get('VISION_MAX_PDF_PAGES', str(DEFAULT_VISION_MAX_PDF_PAGES))
+    max_pages = int(raw)
+    return max_pages
 
 
 def get_alchemy_config() -> SQLAlchemyAsyncConfig:

@@ -157,7 +157,7 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
 
             {showEmptyState && (
               <p className="column-empty">
-                Ask a question or upload a PDF to get started.
+                Ask a question or upload a PDF/image to get started.
               </p>
             )}
 
@@ -207,7 +207,7 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,application/pdf"
+                accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
                 className="sr-only"
                 onChange={handleFileChange}
                 disabled={isBusy}
@@ -218,7 +218,7 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
                 disabled={isBusy}
                 onClick={() => fileInputRef.current?.click()}
               >
-                {props.isUploading ? "Uploading…" : "Upload PDF"}
+                {props.isUploading ? "Uploading…" : "Upload file"}
               </button>
               <button
                 type="submit"

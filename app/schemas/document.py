@@ -22,6 +22,7 @@ class DocumentRead(BaseModel):
     chat_session_id: uuid.UUID
     filename: str
     file_url: str
+    content_type: str
     annotations: list[DocumentAnnotationRead]
 
 

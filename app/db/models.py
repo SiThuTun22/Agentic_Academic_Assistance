@@ -40,6 +40,7 @@ class SessionDocument(Base):
     filename: Mapped[str] = mapped_column(String(500))
     storage_path: Mapped[str] = mapped_column(String(1000))
     extracted_text: Mapped[str] = mapped_column(Text)
+    vision_description: Mapped[str] = mapped_column(Text, default='')
     annotations_json: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
