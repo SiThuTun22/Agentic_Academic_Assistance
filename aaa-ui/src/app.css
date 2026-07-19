@@ -367,6 +367,18 @@ body {
   max-width: min(280px, 45vw);
   padding-right: 6px;
   box-shadow: var(--shadow-md);
+  animation: rail-card-reveal 0.2s ease;
+}
+
+@keyframes rail-card-reveal {
+  from {
+    opacity: 0.7;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .session-rail-card.active {
@@ -462,7 +474,12 @@ body {
 }
 
 .btn-new-session {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   width: 100%;
+  min-width: 0;
   padding: 10px 14px;
   font-family: inherit;
   font-size: 14px;
@@ -473,6 +490,15 @@ body {
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.btn-new-session-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .btn-new-session:hover {
@@ -904,6 +930,10 @@ body {
   overflow: hidden;
 }
 
+.workspace-layout--panel-animating {
+  transition: grid-template-columns 0.22s ease;
+}
+
 .workspace-column {
   display: flex;
   flex-direction: column;
@@ -954,7 +984,7 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(1);
   z-index: 4;
   display: inline-flex;
   align-items: center;
@@ -968,10 +998,25 @@ body {
   color: var(--text-secondary);
   box-shadow: var(--shadow-md);
   cursor: pointer;
+  opacity: 1;
+  animation: edge-toggle-in 0.2s ease;
   transition:
     background 0.15s ease,
     color 0.15s ease,
-    border-color 0.15s ease;
+    border-color 0.15s ease,
+    opacity 0.2s ease,
+    transform 0.15s ease;
+}
+
+@keyframes edge-toggle-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .btn-document-edge-toggle:hover {
@@ -1015,6 +1060,10 @@ body {
 body.is-resizing-columns {
   cursor: col-resize;
   user-select: none;
+}
+
+body.is-resizing-columns .workspace-layout--panel-animating {
+  transition: none;
 }
 
 body.is-resizing-columns iframe,
@@ -1237,9 +1286,11 @@ body.is-resizing-columns .session-sidebar {
 }
 
 .session-sidebar .btn-new-session {
-  width: auto;
+  width: calc(100% - 32px);
+  max-width: calc(100% - 32px);
+  min-width: 0;
   margin: 16px 16px 8px;
-  align-self: stretch;
+  align-self: flex-start;
 }
 
 .tutor-chat-panel {
@@ -1518,8 +1569,13 @@ body.is-resizing-columns .session-sidebar {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .workspace-layout--panel-animating,
   .resize-handle,
-  .document-viewer-panel {
+  .document-viewer-panel,
+  .btn-document-edge-toggle,
+  .session-rail-card,
+  .session-rail-title {
     transition: none;
+    animation: none;
   }
 }

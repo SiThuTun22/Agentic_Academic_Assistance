@@ -103,8 +103,8 @@ export function SessionSidebar(props: SessionSidebarProps) {
           type="button"
           className="sidebar-rail-btn"
           onClick={props.onNewSession}
-          title="New session"
-          aria-label="New session"
+          title="New chat"
+          aria-label="New chat"
         >
           +
         </button>
@@ -210,8 +210,10 @@ export function SessionSidebar(props: SessionSidebarProps) {
         type="button"
         className={newSessionClass}
         onClick={props.onNewSession}
+        title="New chat"
       >
-        <span aria-hidden="true">+</span> New session
+        <span aria-hidden="true">+</span>
+        <span className="btn-new-session-label">New chat</span>
       </button>
 
       {props.isLoading && (
@@ -231,7 +233,7 @@ export function SessionSidebar(props: SessionSidebarProps) {
 
       {isEmpty && props.error === null && (
         <p className="column-empty">
-          No sessions yet. Create your first session to start studying.
+          No chats yet. Ask a question or upload a file to start.
         </p>
       )}
 

@@ -4,6 +4,7 @@ interface ResizeHandleProps {
   ariaLabel: string;
   onDrag: (deltaX: number) => void;
   onReset: () => void;
+  onDragStart?: () => void;
   className?: string;
 }
 
@@ -84,6 +85,9 @@ export function ResizeHandle(props: ResizeHandleProps) {
     lastXRef.current = event.clientX;
     activePointerIdRef.current = event.pointerId;
     document.body.classList.add("is-resizing-columns");
+    if (props.onDragStart !== undefined) {
+      props.onDragStart();
+    }
   }
 
   function handleLostPointerCapture(): void {

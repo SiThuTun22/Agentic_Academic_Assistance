@@ -1,4 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+
+const PANEL_ANIMATION_MS = 220;
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  return media.matches;
+}
 import {
   ApiRequestError,
   checkHealth,
@@ -92,6 +102,7 @@ export function Workspace() {
   const { user, logout } = useAuth();
   const layoutRef = useRef<HTMLDivElement | null>(null);
   const skipSessionHydrateRef = useRef(false);
+  const panelAnimTimerRef = useRef<number | null>(null);
 
   const [themeMode, setThemeMode] = useState<ThemeMode>(() =>
     getInitialThemeMode(),
@@ -106,6 +117,7 @@ export function Workspace() {
     null,
   );
   const [documentPanelOpen, setDocumentPanelOpen] = useState(true);
+  const [panelAnimating, setPanelAnimating] = useState(false);
 
   const [chatWidths, setChatWidths] = useState<ChatColumnWidths>(() =>
     getStoredChatColumnWidths(),
@@ -500,8 +512,15 @@ export function Workspace() {
       const sessionId = await ensureActiveSessionId();
       const result = await uploadDocument(sessionId, file);
       upsertSession(result.session);
-      setCurrentDocument(result.document);
-      setDocumentPanelOpen(true);
+      if (!documentPanelOpen) {
+        runPanelToggleAnimation(() => {
+          setCurrentDocument(result.document);
+          setDocumentPanelOpen(true);
+        });
+      } else {
+        setCurrentDocument(result.document);
+        setDocumentPanelOpen(true);
+      }
       setMessages((prev) => [
         ...prev,
         result.user_message,
@@ -524,6 +543,43 @@ export function Workspace() {
     }
   }
 
+  useEffect(() => {
+    return () => {
+      if (panelAnimTimerRef.current !== null) {
+        window.clearTimeout(panelAnimTimerRef.current);
+      }
+    };
+  }, []);
+
+  function clearPanelAnimation(): void {
+    if (panelAnimTimerRef.current !== null) {
+      window.clearTimeout(panelAnimTimerRef.current);
+      panelAnimTimerRef.current = null;
+    }
+    setPanelAnimating(false);
+  }
+
+  function runPanelToggleAnimation(applyToggle: () => void): void {
+    if (prefersReducedMotion()) {
+      applyToggle();
+      return;
+    }
+
+    if (panelAnimTimerRef.current !== null) {
+      window.clearTimeout(panelAnimTimerRef.current);
+      panelAnimTimerRef.current = null;
+    }
+
+    setPanelAnimating(true);
+    window.requestAnimationFrame(() => {
+      applyToggle();
+      panelAnimTimerRef.current = window.setTimeout(() => {
+        setPanelAnimating(false);
+        panelAnimTimerRef.current = null;
+      }, PANEL_ANIMATION_MS);
+    });
+  }
+
   const hasDocument = currentDocument !== null;
   const showDocumentColumn = hasDocument && documentPanelOpen;
   const effectiveLayoutMode: LayoutMode = showDocumentColumn
@@ -532,22 +588,37 @@ export function Workspace() {
   const mobileLayoutMode: LayoutMode = hasDocument ? "document" : "chat";
 
   function handleCloseDocumentPanel(): void {
-    setDocumentPanelOpen(false);
-    if (activeMobileTab === "document") {
-      setActiveMobileTab("chat");
-    }
+    runPanelToggleAnimation(() => {
+      setDocumentPanelOpen(false);
+      if (activeMobileTab === "document") {
+        setActiveMobileTab("chat");
+      }
+    });
   }
 
   function handleOpenDocumentPanel(): void {
-    setDocumentPanelOpen(true);
-    setActiveMobileTab("document");
+    runPanelToggleAnimation(() => {
+      setDocumentPanelOpen(true);
+      setActiveMobileTab("document");
+    });
   }
 
   function handleMobileTabChange(tab: MobileTab): void {
+    if (tab === "document" && hasDocument && !documentPanelOpen) {
+      runPanelToggleAnimation(() => {
+        setDocumentPanelOpen(true);
+        setActiveMobileTab(tab);
+      });
+      return;
+    }
     if (tab === "document" && hasDocument) {
       setDocumentPanelOpen(true);
     }
     setActiveMobileTab(tab);
+  }
+
+  function handleResizeDragStart(): void {
+    clearPanelAnimation();
   }
 
   const rootClass = `academic-app theme-${themeMode}`;
@@ -556,6 +627,9 @@ export function Workspace() {
     layoutClass = "workspace-layout workspace-layout--document";
     if (!documentPanelOpen) {
       layoutClass = `${layoutClass} workspace-layout--document-collapsed`;
+    }
+    if (panelAnimating) {
+      layoutClass = `${layoutClass} workspace-layout--panel-animating`;
     }
   }
 
@@ -647,6 +721,7 @@ export function Workspace() {
             ariaLabel="Resize sessions and chat columns"
             onDrag={handleChatSessionsDrag}
             onReset={resetChatSessionsWidth}
+            onDragStart={handleResizeDragStart}
           />
         )}
 
@@ -660,6 +735,7 @@ export function Workspace() {
               }
               onDrag={handleDocumentSessionsDrag}
               onReset={resetDocumentSessionsWidth}
+              onDragStart={handleResizeDragStart}
             />
             {!documentPanelOpen && (
               <button
@@ -707,6 +783,7 @@ export function Workspace() {
             ariaLabel="Resize document and chat columns"
             onDrag={handleDocumentChatDrag}
             onReset={resetDocumentChatWidth}
+            onDragStart={handleResizeDragStart}
             className={
               showDocumentColumn ? undefined : "resize-handle--collapsed"
             }
