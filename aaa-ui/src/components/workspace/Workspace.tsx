@@ -18,12 +18,15 @@ import {
   getLatestDocument,
   listMessages,
   listSessions,
+  updateSession,
   uploadDocument,
 } from "../../lib/api";
 import type {
   ChatMessageRead,
   ChatSessionRead,
   DocumentRead,
+  TutorAvatar,
+  TutorTone,
 } from "../../lib/apiTypes";
 import { useAuth } from "../../context/AuthContext";
 import type { ThemeMode } from "../../types";
@@ -59,20 +62,6 @@ import { MobileTabBar } from "./MobileTabBar";
 import { ResizeHandle } from "./ResizeHandle";
 import { SessionSidebar } from "./SessionSidebar";
 import { TutorChatPanel } from "./TutorChatPanel";
-
-function formatTone(tone: ChatSessionRead["tutor_tone"]): string {
-  if (tone === "strict_academic") {
-    return "Strict academic";
-  }
-  return "Socratic";
-}
-
-function formatAvatar(avatar: ChatSessionRead["tutor_avatar"]): string {
-  if (avatar === "male") {
-    return "Male tutor";
-  }
-  return "Female tutor";
-}
 
 function getMobileColumnClass(
   tab: MobileTab,
@@ -132,6 +121,7 @@ export function Workspace() {
   const [messagesError, setMessagesError] = useState<string | null>(null);
   const [messageSending, setMessageSending] = useState(false);
   const [documentUploading, setDocumentUploading] = useState(false);
+  const [tutorSettingsSaving, setTutorSettingsSaving] = useState(false);
 
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
     null,
@@ -580,6 +570,32 @@ export function Workspace() {
     });
   }
 
+  async function handleUpdateTutorSettings(next: {
+    tutor_tone: TutorTone;
+    tutor_avatar: TutorAvatar;
+  }): Promise<void> {
+    if (activeSessionId === null) {
+      return;
+    }
+
+    setTutorSettingsSaving(true);
+    setMessagesError(null);
+
+    try {
+      const updated = await updateSession(activeSessionId, next);
+      upsertSession(updated);
+    } catch (error) {
+      const message =
+        error instanceof ApiRequestError
+          ? error.message
+          : "Failed to update tutor settings.";
+      setMessagesError(message);
+      throw error;
+    } finally {
+      setTutorSettingsSaving(false);
+    }
+  }
+
   const hasDocument = currentDocument !== null;
   const showDocumentColumn = hasDocument && documentPanelOpen;
   const effectiveLayoutMode: LayoutMode = showDocumentColumn
@@ -666,16 +682,6 @@ export function Workspace() {
           </button>
         </div>
       )}
-
-      <div className="workspace-toolbar">
-        <div className="workspace-toolbar-left">
-          <span className="workspace-session-context">
-            {activeSession !== null
-              ? `${activeSession.title} · ${formatTone(activeSession.tutor_tone)} · ${formatAvatar(activeSession.tutor_avatar)}`
-              : "Ask a question or upload a file to begin"}
-          </span>
-        </div>
-      </div>
 
       <MobileTabBar
         activeTab={activeMobileTab}
@@ -794,6 +800,10 @@ export function Workspace() {
           isSending={messageSending}
           isUploading={documentUploading}
           error={messagesError}
+          tutorTone={activeSession?.tutor_tone ?? "socratic"}
+          tutorAvatar={activeSession?.tutor_avatar ?? "female"}
+          isSavingTutorSettings={tutorSettingsSaving}
+          onUpdateTutorSettings={handleUpdateTutorSettings}
           onSend={handleSendMessage}
           onUploadPdf={handleUploadPdf}
           onRetryMessages={() => {

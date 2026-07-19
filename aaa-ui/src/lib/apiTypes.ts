@@ -33,6 +33,11 @@ export interface ChatSessionCreate {
   status?: ChatSessionStatus;
 }
 
+export interface ChatSessionUpdate {
+  tutor_tone?: TutorTone;
+  tutor_avatar?: TutorAvatar;
+}
+
 export interface ChatSessionRead {
   id: string;
   title: string;

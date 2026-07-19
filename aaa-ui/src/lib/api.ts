@@ -5,6 +5,7 @@ import type {
   ChatMessageRead,
   ChatSessionCreate,
   ChatSessionRead,
+  ChatSessionUpdate,
   DocumentRead,
   DocumentUploadRead,
   LoginRequest,
@@ -117,6 +118,16 @@ export function createSession(
 ): Promise<ChatSessionRead> {
   return request<ChatSessionRead>("/api/chat-sessions/", {
     method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateSession(
+  sessionId: string,
+  data: ChatSessionUpdate,
+): Promise<ChatSessionRead> {
+  return request<ChatSessionRead>(`/api/chat-sessions/${sessionId}`, {
+    method: "PATCH",
     body: JSON.stringify(data),
   });
 }

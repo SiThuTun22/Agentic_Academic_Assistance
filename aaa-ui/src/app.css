@@ -908,18 +908,6 @@ body {
 }
 
 /* ── Workspace ── */
-.workspace-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 8px 20px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  overflow: visible;
-}
-
 .user-profile {
   position: relative;
   flex-shrink: 0;
@@ -1213,6 +1201,76 @@ body.is-resizing-columns .session-sidebar {
   border-bottom: 1px solid var(--border);
   background: var(--bg-card);
   flex-shrink: 0;
+}
+
+.tutor-settings {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.tutor-settings-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tutor-settings-avatar:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.tutor-settings-avatar:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tutor-settings-avatar:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.tutor-settings.is-open .tutor-settings-avatar {
+  box-shadow: var(--shadow-md);
+}
+
+.tutor-settings-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(260px, 70vw);
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tutor-settings-heading {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tutor-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .column-title {
@@ -1544,18 +1602,6 @@ body.is-resizing-columns .session-sidebar {
   margin-top: 8px;
 }
 
-.workspace-toolbar-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.workspace-session-context {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
 .btn-new-session-prominent {
   background: var(--color-primary);
   color: var(--text-on-primary);
@@ -1714,21 +1760,6 @@ body.is-resizing-columns .session-sidebar {
   .mobile-tab.active {
     color: var(--color-primary);
     border-bottom-color: var(--color-primary);
-  }
-
-  .workspace-toolbar-left {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-  }
-
-  .workspace-session-context {
-    font-size: 13px;
-    color: var(--text-secondary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 }
 

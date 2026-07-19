@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import type { ChatMessageRead } from "../../lib/apiTypes";
+import type {
+  ChatMessageRead,
+  TutorAvatar,
+  TutorTone,
+} from "../../lib/apiTypes";
 import { TutorMessageContent } from "./TutorMessageContent";
+import { TutorSettingsMenu } from "./TutorSettingsMenu";
 import { TutorThinkingIndicator } from "./TutorThinkingIndicator";
 
 interface TutorChatPanelProps {
@@ -10,6 +15,13 @@ interface TutorChatPanelProps {
   isSending: boolean;
   isUploading: boolean;
   error: string | null;
+  tutorTone: TutorTone;
+  tutorAvatar: TutorAvatar;
+  isSavingTutorSettings?: boolean;
+  onUpdateTutorSettings: (next: {
+    tutor_tone: TutorTone;
+    tutor_avatar: TutorAvatar;
+  }) => Promise<void>;
   onSend: (content: string) => Promise<void>;
   onUploadPdf: (file: File) => Promise<void>;
   onRetryMessages: () => void;
@@ -139,6 +151,13 @@ export function TutorChatPanel(props: TutorChatPanelProps) {
     <section className={columnClass} aria-label="Tutor chat">
       <div className="column-header">
         <h2 className="column-title">Tutor chat</h2>
+        <TutorSettingsMenu
+          tutorTone={props.tutorTone}
+          tutorAvatar={props.tutorAvatar}
+          disabled={props.sessionId === null}
+          isSaving={props.isSavingTutorSettings === true}
+          onChange={props.onUpdateTutorSettings}
+        />
       </div>
 
       <div

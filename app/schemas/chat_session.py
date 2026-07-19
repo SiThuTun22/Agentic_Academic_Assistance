@@ -15,6 +15,11 @@ class ChatSessionCreate(BaseModel):
     status: ChatSessionStatus = ChatSessionStatus.ACTIVE
 
 
+class ChatSessionUpdate(BaseModel):
+    tutor_tone: TutorTone | None = None
+    tutor_avatar: TutorAvatar | None = None
+
+
 class ChatSessionRead(BaseModel):
     id: uuid.UUID
     title: str
