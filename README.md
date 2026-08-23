@@ -19,11 +19,12 @@ cd aaa-ui && npm install && npm run dev   # http://localhost:5173
 docker rm -f aaa-ollama 2>/dev/null || true
 curl -fsSL https://ollama.com/install.sh | sh
 ollama pull qwen3:8b
+ollama pull qwen2.5vl:3b
 systemctl status ollama
 ./scripts/verify-gpu-ollama.sh
 ```
 
-Default API: `http://localhost:11434` (set in `.env`).
+Default API: `http://localhost:11434` (set in `.env`). Tutor chat uses `qwen3:8b`; PDF/image vision uses `qwen2.5vl:3b`.
 
 ## Product flow
 
@@ -54,15 +55,21 @@ Default API: `http://localhost:11434` (set in `.env`).
 | `DATABASE_URL` | see `.env.example` | PostgreSQL async URL |
 | `JWT_SECRET` | `change-me-in-production` | JWT signing secret |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API |
-| `OLLAMA_MODEL` | `qwen3:8b` | Model tag |
-| `OLLAMA_TIMEOUT_SECONDS` | `120` | Request timeout |
-| `OLLAMA_MAX_TOKENS` | `384` | Max reply tokens |
+| `OLLAMA_MODEL` | `qwen3:8b` | Tutor chat model tag |
+| `OLLAMA_VISION_MODEL` | `qwen2.5vl:3b` | Local vision model for PDF/image analysis |
+| `OLLAMA_TIMEOUT_SECONDS` | `120` | Tutor chat request timeout |
+| `OLLAMA_VISION_TIMEOUT_SECONDS` | `360` | Vision request timeout (first load can be slow) |
+| `OLLAMA_MAX_TOKENS` | `384` | Max tutor reply tokens |
+| `OLLAMA_VISION_MAX_TOKENS` | `512` | Max vision description tokens |
+| `OLLAMA_VISION_NUM_CTX` | `8192` | Vision model context window for Ollama |
+| `VISION_MAX_PDF_PAGES` | `2` | Max PDF pages sent to vision model |
+| `VISION_MAX_IMAGE_EDGE` | `768` | Max pixel edge for vision images (avoids context overflow) |
 
 ## API overview
 
 - `POST /api/auth/register`, `POST /api/auth/login` — public
 - `GET/POST /api/chat-sessions` — sessions (JWT)
-- `POST /api/chat-sessions/{id}/documents` — PDF upload + processing (JWT + Ollama)
+- `POST /api/chat-sessions/{id}/documents` — PDF/image upload + processing (JWT + Ollama vision + Ollama tutor)
 - `GET /api/chat-sessions/{id}/documents/latest` — latest document metadata
 - `GET /api/chat-sessions/{id}/documents/{doc_id}/file` — PDF file stream
 - `GET/POST /api/chat-sessions/{id}/messages` — tutor Q&A (JWT + Ollama on POST)

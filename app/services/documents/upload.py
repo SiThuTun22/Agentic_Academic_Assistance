@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass
 
-from app.ai.github_vision import extract_vision_description
+from app.ai.errors import LlmUnavailableError
+from app.ai.ollama_vision import extract_vision_description
 from app.ai.tutor import generate_tutor_reply
 from app.db.models import ChatMessage, ChatSession, MessageRole, SessionDocument
 from app.lib.config import get_vision_max_pdf_pages
@@ -16,6 +18,8 @@ from app.services.documents.context import build_document_context
 from app.services.documents.pdf_extract import extract_pdf_words, render_pdf_pages_as_png
 from app.services.documents.storage import save_uploaded_file
 from app.services.documents.terms import extract_document_terms
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -58,6 +62,15 @@ def _title_source_for_upload(
     return joined
 
 
+async def _vision_description_or_empty(image_bytes_list: list[bytes]) -> str:
+    try:
+        description = await extract_vision_description(image_bytes_list)
+    except LlmUnavailableError as error:
+        logger.warning('Vision description skipped; upload continues with extracted text only: %s', error)
+        description = ''
+    return description
+
+
 async def process_document_upload(
     chat_session: ChatSession,
     session_id: uuid.UUID,
@@ -82,11 +95,11 @@ async def process_document_upload(
 
         max_pages = get_vision_max_pdf_pages()
         page_images = render_pdf_pages_as_png(storage_path, max_pages)
-        vision_description = await extract_vision_description(page_images)
+        vision_description = await _vision_description_or_empty(page_images)
     elif is_image_filename(filename):
         image_list: list[bytes] = []
         image_list.append(file_bytes)
-        vision_description = await extract_vision_description(image_list)
+        vision_description = await _vision_description_or_empty(image_list)
     else:
         raise ValueError(f'Unsupported file type: {filename}')
 

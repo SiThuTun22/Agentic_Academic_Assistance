@@ -1,0 +1,96 @@
+@startuml aaa-use-case
+left to right direction
+skinparam shadowing false
+skinparam monochrome true
+skinparam backgroundColor white
+skinparam actorBackgroundColor white
+skinparam usecaseBackgroundColor white
+skinparam arrowColor black
+skinparam actorBorderColor black
+skinparam usecaseBorderColor black
+skinparam packageBorderColor black
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+actor Student as Student
+actor "Ollama\nQwen" as Qwen
+actor "Ollama\nVision" as Vision
+
+rectangle "Agentic Academic Assistant" {
+  usecase "Register account" as UC_Register
+  usecase "Login" as UC_Login
+  usecase "Log out" as UC_Logout
+  usecase "Start new chat" as UC_NewChat
+  usecase "Browse session list" as UC_Browse
+  usecase "Open a session" as UC_Open
+  usecase "Delete a session" as UC_Delete
+  usecase "Send question message" as UC_Send
+  usecase "Upload PDF" as UC_UpPDF
+  usecase "Upload image" as UC_UpImg
+  usecase "View message history" as UC_History
+  usecase "View PDF with highlights" as UC_ViewPDF
+  usecase "View image document" as UC_ViewImg
+  usecase "Close document panel" as UC_Close
+  usecase "Reopen document panel" as UC_Reopen
+  usecase "Resize columns" as UC_Resize
+  usecase "Change tutor tone" as UC_Tone
+  usecase "Change tutor avatar" as UC_Avatar
+  usecase "Change display theme" as UC_Theme
+
+  usecase "Auto-create session" as UC_Auto
+  usecase "Generate tutor reply" as UC_Reply
+  usecase "Generate short session title" as UC_Title
+  usecase "Extract PDF text" as UC_Extract
+  usecase "Extract glossary terms" as UC_Terms
+  usecase "Describe visual content" as UC_Vision
+  usecase "Summarize document" as UC_Summary
+  usecase "Hover term definition" as UC_Hover
+}
+
+Student --> UC_Register
+Student --> UC_Login
+Student --> UC_Logout
+Student --> UC_NewChat
+Student --> UC_Browse
+Student --> UC_Open
+Student --> UC_Delete
+Student --> UC_Send
+Student --> UC_UpPDF
+Student --> UC_UpImg
+Student --> UC_History
+Student --> UC_ViewPDF
+Student --> UC_ViewImg
+Student --> UC_Close
+Student --> UC_Reopen
+Student --> UC_Resize
+Student --> UC_Tone
+Student --> UC_Avatar
+Student --> UC_Theme
+
+UC_Send ..> UC_Reply : <<include>>
+UC_UpPDF ..> UC_Extract : <<include>>
+UC_UpPDF ..> UC_Terms : <<include>>
+UC_UpPDF ..> UC_Vision : <<include>>
+UC_UpPDF ..> UC_Summary : <<include>>
+UC_UpPDF ..> UC_ViewPDF : <<include>>
+UC_UpImg ..> UC_Vision : <<include>>
+UC_UpImg ..> UC_Summary : <<include>>
+UC_UpImg ..> UC_ViewImg : <<include>>
+UC_Summary ..> UC_Reply : <<include>>
+UC_Open ..> UC_History : <<include>>
+
+UC_Auto ..> UC_Send : <<extend>>
+UC_Auto ..> UC_UpPDF : <<extend>>
+UC_Auto ..> UC_UpImg : <<extend>>
+UC_Title ..> UC_Send : <<extend>>
+UC_Title ..> UC_UpPDF : <<extend>>
+UC_Title ..> UC_UpImg : <<extend>>
+UC_Hover ..> UC_ViewPDF : <<extend>>
+
+Qwen --> UC_Reply
+Qwen --> UC_Terms
+Qwen --> UC_Summary
+Qwen --> UC_Title
+Vision --> UC_Vision
+
+@enduml

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="888" viewBox="0 0 720 888">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="360" y="36" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="18" font-weight="700" fill="#111">AAA — Core Flow</text>
+<rect x="280.0" y="60" width="160" height="40" rx="20.0" ry="20.0" fill="#fff" stroke="#111" stroke-width="1.8"/>
+<text x="360" y="85.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#111">Start</text>
+<line x1="360" y1="100" x2="360" y2="115.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 360 124 L 355 115.0 L 365 115.0 Z" fill="#111"/>
+<rect x="150.0" y="124" width="420" height="44" rx="2" ry="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="360" y="151.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="400" fill="#111">1. Login / Register</text>
+<line x1="360" y1="168" x2="360" y2="181.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 360 190 L 355 181.0 L 365 181.0 Z" fill="#111"/>
+<rect x="150.0" y="190" width="420" height="44" rx="2" ry="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="360" y="217.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="400" fill="#111">2. Open new chat</text>
+<line x1="360" y1="234" x2="360" y2="247.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 360 256 L 355 247.0 L 365 247.0 Z" fill="#111"/>
+<rect x="150.0" y="256" width="420" height="44" rx="2" ry="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="360" y="283.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="400" fill="#111">3. Ask a question OR upload PDF / image</text>
+<line x1="360" y1="300" x2="360" y2="313.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 360 322 L 355 313.0 L 365 313.0 Z" fill="#111"/>
+<rect x="150.0" y="322" width="420" height="44" rx="2" ry="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="360" y="349.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="400" fill="#111">4. Auto-create session</text>
+<line x1="360" y1="366" x2="360" y2="379.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 360 388 L 355 379.0 L 365 379.0 Z" fill="#111"/>
+<path d="M 360 388.0 L 500.0 424 L 360 460.0 L 220.0 424 Z" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="360" y="429" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="400" fill="#111">Text chat or file upload?</text>
+<line x1="220" y1="424" x2="180" y2="424" stroke="#111" stroke-width="1.4"/>
+<line x1="180" y1="424" x2="180" y2="470" stroke="#111" stroke-width="1.4"/>
+<line x1="180" y1="470" x2="180" y2="479.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 180 488 L 175 479.0 L 185 479.0 Z" fill="#111"/>
+<text x="180" y="414" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="600" fill="#111">Text</text>
+<line x1="500" y1="424" x2="540" y2="424" stroke="#111" stroke-width="1.4"/>
+<line x1="540" y1="424" x2="540" y2="470" stroke="#111" stroke-width="1.4"/>
+<line x1="540" y1="470" x2="540" y2="479.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 540 488 L 535 479.0 L 545 479.0 Z" fill="#111"/>
+<text x="540" y="414" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="600" fill="#111">Upload</text>
+<rect x="40.0" y="488" width="280" height="56" rx="2" ry="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="180" y="521.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="400" fill="#111">5. Tutor replies with Qwen</text>
+<rect x="400.0" y="488" width="280" height="72" rx="2" ry="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="540" y="508.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="400" fill="#111">5. Extract text + vision</text>
+<text x="540" y="524.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="400" fill="#111">→ Tutor summarizes</text>
+<text x="540" y="540.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="12" font-weight="400" fill="#111">→ Show doc + highlights</text>
+<line x1="180" y1="544" x2="180" y2="596" stroke="#111" stroke-width="1.4"/>
+<line x1="540" y1="560" x2="540" y2="596" stroke="#111" stroke-width="1.4"/>
+<line x1="180" y1="596" x2="540" y2="596" stroke="#111" stroke-width="1.4"/>
+<line x1="360" y1="596" x2="360" y2="611.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 360 620 L 355 611.0 L 365 611.0 Z" fill="#111"/>
+<rect x="150.0" y="620" width="420" height="44" rx="2" ry="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="360" y="647.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="400" fill="#111">6. Generate short session title</text>
+<line x1="360" y1="664" x2="360" y2="677.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 360 686 L 355 677.0 L 365 677.0 Z" fill="#111"/>
+<rect x="150.0" y="686" width="420" height="44" rx="2" ry="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="360" y="713.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="400" fill="#111">7. Continue follow-up chat</text>
+<line x1="360" y1="730" x2="360" y2="743.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 360 752 L 355 743.0 L 365 743.0 Z" fill="#111"/>
+<rect x="150.0" y="752" width="420" height="44" rx="2" ry="2" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="360" y="779.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="13" font-weight="400" fill="#111">8. Optional: Edit tutor tone / avatar</text>
+<line x1="360" y1="796" x2="360" y2="809.0" stroke="#111" stroke-width="1.4"/>
+<path d="M 360 818 L 355 809.0 L 365 809.0 Z" fill="#111"/>
+<rect x="280.0" y="818" width="160" height="40" rx="20.0" ry="20.0" fill="#fff" stroke="#111" stroke-width="1.8"/>
+<text x="360" y="843.0" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="14" font-weight="700" fill="#111">End</text>
+</svg>

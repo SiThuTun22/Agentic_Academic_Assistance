@@ -1,0 +1,187 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1080" viewBox="0 0 1680 1080">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="840" y="28" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="700" fill="#111">AAA — Use Case Diagram</text>
+<rect x="190" y="48" width="1200" height="900" fill="none" stroke="#111" stroke-width="1.8"/>
+<text x="200" y="70" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#111">Agentic Academic Assistant</text>
+<text x="40" y="990" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111"><tspan font-weight="700">&lt;&lt;include&gt;&gt;</tspan> dashed open arrow: base → included</text>
+<text x="40" y="1010" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111"><tspan font-weight="700">&lt;&lt;extend&gt;&gt;</tspan> dashed open arrow: extension → base</text>
+<text x="40" y="1030" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Solid line: actor association</text>
+<line x1="102" y1="440" x2="286.10706348388817" y2="116.78665044572087" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="283.76540182832673" y2="171.40015213538751" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="280.2417269493839" y2="226.1054280313399" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="271.7484029506409" y2="296.1886977870193" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="258.90522632432544" y2="350.5473868378373" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="232.55474452554745" y2="401.86131386861314" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="195.0" y2="440.0" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="543.0850371130065" y2="235.17392589232404" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="500.23502502132703" y2="431.9185572111283" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="542.1421934919808" y2="626.6343473717615" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="243.72211691508627" y2="495.814358039234" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="264.44133763254496" y2="548.9880631465038" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="274.4382835082855" y2="603.5049202228764" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="281.25266703527757" y2="673.2701367908899" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="284.5074770817647" y2="728.169626797032" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="286.8442200992172" y2="783.1733651646103" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="946.7008755137593" y2="698.166218238141" stroke="#111" stroke-width="1.05"/>
+<line x1="102" y1="440" x2="965.106790379243" y2="816.6411873954225" stroke="#111" stroke-width="1.05"/>
+<line x1="730.0" y1="210.0" x2="812.5" y2="210.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<line x1="812.5" y1="210.0" x2="812.5" y2="210.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<line x1="812.5" y1="210.0" x2="884.0" y2="210.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 895.0 210.0 L 884.0 216.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 895.0 210.0 L 884.0 204.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<text x="812.5" y="202.0" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="700.0" y1="430.0" x2="780.0" y2="430.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<line x1="780.0" y1="340.0" x2="780.0" y2="720.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<text x="776.0" y="530.0" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="780.0" y1="340.0" x2="894.0" y2="340.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 905.0 340.0 L 894.0 346.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 905.0 340.0 L 894.0 334.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<line x1="780.0" y1="410.0" x2="884.0" y2="410.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 895.0 410.0 L 884.0 416.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 895.0 410.0 L 884.0 404.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<line x1="780.0" y1="500.0" x2="879.0" y2="500.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 890.0 500.0 L 879.0 506.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 890.0 500.0 L 879.0 494.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<line x1="780.0" y1="590.0" x2="889.0" y2="590.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 900.0 590.0 L 889.0 596.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 900.0 590.0 L 889.0 584.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<line x1="780.0" y1="720.0" x2="874.0" y2="720.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 885.0 720.0 L 874.0 726.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 885.0 720.0 L 874.0 714.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<line x1="705.0" y1="650.0" x2="760.0" y2="650.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<line x1="760.0" y1="500.0" x2="760.0" y2="840.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<text x="756.0" y="670.0" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="760.0" y1="500.0" x2="879.0" y2="500.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 890.0 500.0 L 879.0 506.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 890.0 500.0 L 879.0 494.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<line x1="760.0" y1="590.0" x2="889.0" y2="590.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 900.0 590.0 L 889.0 596.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 900.0 590.0 L 889.0 584.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<line x1="760.0" y1="840.0" x2="884.0" y2="840.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 895.0 840.0 L 884.0 846.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 895.0 840.0 L 884.0 834.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<line x1="1140.0" y1="590.0" x2="1195.0" y2="590.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<line x1="1195.0" y1="590.0" x2="1195.0" y2="210.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<line x1="1195.0" y1="210.0" x2="1156.0" y2="210.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 1145.0 210.0 L 1156.0 204.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 1145.0 210.0 L 1156.0 216.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<rect x="1201.0" y="388.0" width="72" height="16" fill="#fff" fill-opacity="0.95"/>
+<text x="1237.0" y="400.0" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="313.8" y1="406.8" x2="577.8" y2="824.9" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 583.7 834.2 L 572.8 828.1" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 583.7 834.2 L 582.9 821.7" fill="none" stroke="#111" stroke-width="1.25"/>
+<rect x="422.9" y="602.1" width="72" height="16" fill="#fff" fill-opacity="0.92"/>
+<text x="458.9" y="614.1" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="600.0" y1="182.0" x2="600.0" y2="125.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 600.0 114.0 L 606.0 125.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 600.0 114.0 L 594.0 125.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<rect x="552.0" y="136.0" width="72" height="16" fill="#fff" fill-opacity="0.92"/>
+<text x="588.0" y="148.0" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="600.0" y1="402.0" x2="600.0" y2="125.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 600.0 114.0 L 606.0 125.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 600.0 114.0 L 594.0 125.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<rect x="576.0" y="246.0" width="72" height="16" fill="#fff" fill-opacity="0.92"/>
+<text x="612.0" y="258.0" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="600.0" y1="622.0" x2="600.0" y2="125.0" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 600.0 114.0 L 606.0 125.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 600.0 114.0 L 594.0 125.0" fill="none" stroke="#111" stroke-width="1.25"/>
+<rect x="552.0" y="356.0" width="72" height="16" fill="#fff" fill-opacity="0.92"/>
+<text x="588.0" y="368.0" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="655.0" y1="184.6" x2="797.8" y2="118.7" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 807.7 114.1 L 800.3 124.2" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 807.7 114.1 L 795.2 113.3" fill="none" stroke="#111" stroke-width="1.25"/>
+<rect x="700.4" y="148.3" width="72" height="16" fill="#fff" fill-opacity="0.92"/>
+<text x="736.4" y="160.3" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="620.9" y1="402.6" x2="833.6" y2="124.5" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 840.3 115.7 L 838.4 128.1" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 840.3 115.7 L 828.9 120.8" fill="none" stroke="#111" stroke-width="1.25"/>
+<rect x="685.1" y="239.9" width="72" height="16" fill="#fff" fill-opacity="0.92"/>
+<text x="721.1" y="251.9" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="612.9" y1="622.2" x2="843.3" y2="125.9" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 848.0 115.9 L 848.8 128.4" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 848.0 115.9 L 837.9 123.4" fill="none" stroke="#111" stroke-width="1.25"/>
+<rect x="705.3" y="362.1" width="72" height="16" fill="#fff" fill-opacity="0.92"/>
+<text x="741.3" y="374.1" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;include&gt;&gt;</text>
+<line x1="1243.1" y1="779.5" x2="1109.7" y2="743.9" stroke="#111" stroke-width="1.25" stroke-dasharray="6 4"/>
+<path d="M 1099.0 741.1 L 1111.2 738.1" fill="none" stroke="#111" stroke-width="1.25"/>
+<path d="M 1099.0 741.1 L 1108.1 749.7" fill="none" stroke="#111" stroke-width="1.25"/>
+<rect x="1132.0" y="759.9" width="72" height="16" fill="#fff" fill-opacity="0.92"/>
+<text x="1168.0" y="771.9" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#111">&lt;&lt;extend&gt;&gt;</text>
+<line x1="1496" y1="320" x2="1109.181020076178" y2="229.61982441675912" stroke="#111" stroke-width="1.05"/>
+<line x1="1496" y1="320" x2="1111.1921505175105" y2="393.5854129068481" stroke="#111" stroke-width="1.05"/>
+<line x1="1496" y1="320" x2="1064.685384815781" y2="565.8698921994783" stroke="#111" stroke-width="1.05"/>
+<line x1="1496" y1="320" x2="925.8425193090324" y2="112.94512036526885" stroke="#111" stroke-width="1.05"/>
+<line x1="1496" y1="520" x2="1147.4754878398196" y2="505.0990195135928" stroke="#111" stroke-width="1.05"/>
+<ellipse cx="300" cy="95" rx="100" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="99" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Register account</text>
+<ellipse cx="300" cy="150" rx="70" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="154" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Login</text>
+<ellipse cx="300" cy="205" rx="70" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="209" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Log out</text>
+<ellipse cx="300" cy="275" rx="105" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="279" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Start new chat</text>
+<ellipse cx="300" cy="330" rx="115" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="334" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Browse session list</text>
+<ellipse cx="300" cy="385" rx="105" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="389" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Open a session</text>
+<ellipse cx="300" cy="440" rx="105" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="444" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Delete a session</text>
+<ellipse cx="300" cy="515" rx="115" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="519" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Change tutor tone</text>
+<ellipse cx="300" cy="570" rx="120" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="574" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Change tutor avatar</text>
+<ellipse cx="300" cy="625" rx="120" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="629" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Change display theme</text>
+<ellipse cx="300" cy="695" rx="120" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="699" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Close document panel</text>
+<ellipse cx="300" cy="750" rx="125" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="754" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Reopen document panel</text>
+<ellipse cx="300" cy="805" rx="105" ry="22" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="300" y="809" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Resize columns</text>
+<ellipse cx="600" cy="90" rx="120" ry="24" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="600" y="94" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Auto-create session</text>
+<ellipse cx="600" cy="210" rx="130" ry="28" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="600" y="214" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Send question message</text>
+<ellipse cx="600" cy="430" rx="100" ry="28" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="600" y="434" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Upload PDF</text>
+<ellipse cx="600" cy="650" rx="105" ry="28" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="600" y="654" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Upload image</text>
+<ellipse cx="600" cy="860" rx="125" ry="26" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="600" y="864" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">View message history</text>
+<ellipse cx="860" cy="90" rx="140" ry="26" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="860" y="94" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Generate short session title</text>
+<ellipse cx="1020" cy="210" rx="125" ry="28" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="1020" y="214" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Generate tutor reply</text>
+<ellipse cx="1020" cy="340" rx="115" ry="24" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="1020" y="344" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Extract PDF text</text>
+<ellipse cx="1020" cy="410" rx="125" ry="24" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="1020" y="414" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Extract glossary terms</text>
+<ellipse cx="1020" cy="500" rx="130" ry="26" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="1020" y="504" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Describe visual content</text>
+<ellipse cx="1020" cy="590" rx="120" ry="26" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="1020" y="594" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Summarize document</text>
+<ellipse cx="1020" cy="720" rx="135" ry="26" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="1020" y="724" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">View PDF with highlights</text>
+<ellipse cx="1020" cy="840" rx="125" ry="26" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="1020" y="844" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">View image document</text>
+<ellipse cx="1320" cy="800" rx="125" ry="26" fill="#fff" stroke="#111" stroke-width="1.5"/>
+<text x="1320" y="804" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#111">Hover term definition</text>
+<circle cx="80" cy="412" r="10" fill="none" stroke="#111" stroke-width="1.6"/>
+<line x1="80" y1="422" x2="80" y2="448" stroke="#111" stroke-width="1.6"/>
+<line x1="62" y1="432" x2="98" y2="432" stroke="#111" stroke-width="1.6"/>
+<line x1="80" y1="448" x2="66" y2="474" stroke="#111" stroke-width="1.6"/>
+<line x1="80" y1="448" x2="94" y2="474" stroke="#111" stroke-width="1.6"/>
+<text x="80" y="494" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#111">Student</text>
+<circle cx="1520" cy="292" r="10" fill="none" stroke="#111" stroke-width="1.6"/>
+<line x1="1520" y1="302" x2="1520" y2="328" stroke="#111" stroke-width="1.6"/>
+<line x1="1502" y1="312" x2="1538" y2="312" stroke="#111" stroke-width="1.6"/>
+<line x1="1520" y1="328" x2="1506" y2="354" stroke="#111" stroke-width="1.6"/>
+<line x1="1520" y1="328" x2="1534" y2="354" stroke="#111" stroke-width="1.6"/>
+<text x="1520" y="374" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#111">Ollama Qwen</text>
+<circle cx="1520" cy="492" r="10" fill="none" stroke="#111" stroke-width="1.6"/>
+<line x1="1520" y1="502" x2="1520" y2="528" stroke="#111" stroke-width="1.6"/>
+<line x1="1502" y1="512" x2="1538" y2="512" stroke="#111" stroke-width="1.6"/>
+<line x1="1520" y1="528" x2="1506" y2="554" stroke="#111" stroke-width="1.6"/>
+<line x1="1520" y1="528" x2="1534" y2="554" stroke="#111" stroke-width="1.6"/>
+<text x="1520" y="574" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#111">Ollama Vision</text>
+</svg>

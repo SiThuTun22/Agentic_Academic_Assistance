@@ -30,9 +30,15 @@ def get_chat_model() -> ChatOllama:
 
 
 async def invoke_ollama(runnable: Runnable, payload: dict[str, str]) -> object:
+    timeout_seconds = get_ollama_timeout_seconds()
     try:
         result = await runnable.ainvoke(payload)
-    except (httpx.ConnectError, httpx.TimeoutException, ConnectionError, OSError) as error:
+    except httpx.TimeoutException as error:
+        timeout_message = (
+            f'Ollama timed out after {timeout_seconds}s. Increase OLLAMA_TIMEOUT_SECONDS.'
+        )
+        raise LlmUnavailableError(timeout_message) from error
+    except (httpx.ConnectError, ConnectionError, OSError) as error:
         raise LlmUnavailableError(_OLLAMA_DOWN) from error
     except Exception as error:
         message = str(error)

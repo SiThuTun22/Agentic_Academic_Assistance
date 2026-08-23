@@ -1,0 +1,134 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#ffffff",
+    "primaryTextColor": "#111111",
+    "primaryBorderColor": "#111111",
+    "lineColor": "#111111",
+    "secondaryColor": "#ffffff",
+    "tertiaryColor": "#ffffff",
+    "background": "#ffffff",
+    "mainBkg": "#ffffff",
+    "nodeBorder": "#111111",
+    "clusterBkg": "#ffffff",
+    "clusterBorder": "#111111",
+    "titleColor": "#111111",
+    "edgeLabelBackground": "#ffffff",
+    "fontFamily": "Arial, sans-serif",
+    "fontSize": "13px"
+  },
+  "flowchart": {
+    "curve": "basis",
+    "htmlLabels": true,
+    "padding": 12,
+    "nodeSpacing": 28,
+    "rankSpacing": 55
+  }
+}}%%
+
+flowchart LR
+  classDef actor fill:#fff,stroke:#111,stroke-width:1.5px,color:#111
+  classDef uc fill:#fff,stroke:#111,stroke-width:1.5px,color:#111,rx:40,ry:40
+  classDef sys fill:#fff,stroke:#111,stroke-width:1.5px,color:#111
+
+  Student(["Student"])
+
+  subgraph SYS["Agentic Academic Assistant"]
+    direction TB
+
+    subgraph AUTH["Account"]
+      Register(["Register account"])
+      Login(["Login"])
+      Logout(["Log out"])
+    end
+
+    subgraph SESS["Sessions"]
+      NewChat(["Start new chat"])
+      Browse(["Browse session list"])
+      Open(["Open a session"])
+      Delete(["Delete a session"])
+      History(["View message history"])
+      Auto(["Auto-create session"])
+      Title(["Generate short session title"])
+    end
+
+    subgraph ASK["Ask / Upload"]
+      Send(["Send question message"])
+      UpPDF(["Upload PDF"])
+      UpImg(["Upload image"])
+      Reply(["Generate tutor reply"])
+      Extract(["Extract PDF text"])
+      Terms(["Extract glossary terms"])
+      VisionUC(["Describe visual content"])
+      Summary(["Summarize document"])
+    end
+
+    subgraph DOC["Document UI"]
+      ViewPDF(["View PDF with highlights"])
+      ViewImg(["View image document"])
+      Hover(["Hover term definition"])
+      Close(["Close document panel"])
+      Reopen(["Reopen document panel"])
+      Resize(["Resize columns"])
+    end
+
+    subgraph PREF["Preferences"]
+      Tone(["Change tutor tone"])
+      Avatar(["Change tutor avatar"])
+      Theme(["Change display theme"])
+    end
+  end
+
+  Qwen(["Ollama Qwen"])
+  Vision(["Ollama Vision"])
+
+  Student --- Register
+  Student --- Login
+  Student --- Logout
+  Student --- NewChat
+  Student --- Browse
+  Student --- Open
+  Student --- Delete
+  Student --- Send
+  Student --- UpPDF
+  Student --- UpImg
+  Student --- History
+  Student --- ViewPDF
+  Student --- ViewImg
+  Student --- Close
+  Student --- Reopen
+  Student --- Resize
+  Student --- Tone
+  Student --- Avatar
+  Student --- Theme
+
+  %% include: base points to included use case
+  Send -.->|"<<include>>"| Reply
+  UpPDF -.->|"<<include>>"| Extract
+  UpPDF -.->|"<<include>>"| Terms
+  UpPDF -.->|"<<include>>"| VisionUC
+  UpPDF -.->|"<<include>>"| Summary
+  UpPDF -.->|"<<include>>"| ViewPDF
+  UpImg -.->|"<<include>>"| VisionUC
+  UpImg -.->|"<<include>>"| Summary
+  UpImg -.->|"<<include>>"| ViewImg
+  Summary -.->|"<<include>>"| Reply
+  Open -.->|"<<include>>"| History
+
+  %% extend: extension points to base use case
+  Auto -.->|"<<extend>>"| Send
+  Auto -.->|"<<extend>>"| UpPDF
+  Auto -.->|"<<extend>>"| UpImg
+  Title -.->|"<<extend>>"| Send
+  Title -.->|"<<extend>>"| UpPDF
+  Title -.->|"<<extend>>"| UpImg
+  Hover -.->|"<<extend>>"| ViewPDF
+
+  Qwen --- Reply
+  Qwen --- Terms
+  Qwen --- Summary
+  Qwen --- Title
+  Vision --- VisionUC
+
+  class Student,Qwen,Vision actor
+  class Register,Login,Logout,NewChat,Browse,Open,Delete,History,Auto,Title,Send,UpPDF,UpImg,Reply,Extract,Terms,VisionUC,Summary,ViewPDF,ViewImg,Hover,Close,Reopen,Resize,Tone,Avatar,Theme uc

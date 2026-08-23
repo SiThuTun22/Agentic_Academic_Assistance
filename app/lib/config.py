@@ -13,9 +13,12 @@ DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434'
 DEFAULT_OLLAMA_MODEL = 'qwen3:8b'
 DEFAULT_OLLAMA_TIMEOUT_SECONDS = 120
 DEFAULT_OLLAMA_MAX_TOKENS = 384
-DEFAULT_GITHUB_MODELS_BASE_URL = 'https://models.github.ai/inference'
-DEFAULT_GITHUB_MODELS_MODEL = 'gpt-4o-mini'
-DEFAULT_VISION_MAX_PDF_PAGES = 5
+DEFAULT_OLLAMA_VISION_MODEL = 'qwen2.5vl:3b'
+DEFAULT_OLLAMA_VISION_MAX_TOKENS = 512
+DEFAULT_OLLAMA_VISION_TIMEOUT_SECONDS = 360
+DEFAULT_VISION_MAX_PDF_PAGES = 2
+DEFAULT_VISION_MAX_IMAGE_EDGE = 768
+DEFAULT_OLLAMA_VISION_NUM_CTX = 8192
 APP_VERSION = '0.1.0'
 MIGRATION_PATH = 'migrations'
 _env_path = Path('.env')
@@ -37,6 +40,13 @@ def get_ollama_base_url() -> str:
     return base_url
 
 
+def get_ollama_chat_endpoint() -> str:
+    base_url = get_ollama_base_url()
+    base_stripped = base_url.rstrip('/')
+    endpoint = f'{base_stripped}/api/chat'
+    return endpoint
+
+
 def get_ollama_model() -> str:
     model = os.environ.get('OLLAMA_MODEL', DEFAULT_OLLAMA_MODEL)
     return model
@@ -54,30 +64,39 @@ def get_ollama_max_tokens() -> int:
     return max_tokens
 
 
-def get_github_token() -> str | None:
-    token = os.environ.get('GITHUB_TOKEN')
-    if token is not None and len(token.strip()) > 0:
-        return token.strip()
-    models_token = os.environ.get('GITHUB_MODELS_TOKEN')
-    if models_token is not None and len(models_token.strip()) > 0:
-        return models_token.strip()
-    return None
-
-
-def get_github_models_base_url() -> str:
-    base_url = os.environ.get('GITHUB_MODELS_BASE_URL', DEFAULT_GITHUB_MODELS_BASE_URL)
-    return base_url
-
-
-def get_github_models_model() -> str:
-    model = os.environ.get('GITHUB_MODELS_MODEL', DEFAULT_GITHUB_MODELS_MODEL)
+def get_ollama_vision_model() -> str:
+    model = os.environ.get('OLLAMA_VISION_MODEL', DEFAULT_OLLAMA_VISION_MODEL)
     return model
+
+
+def get_ollama_vision_max_tokens() -> int:
+    raw = os.environ.get('OLLAMA_VISION_MAX_TOKENS', str(DEFAULT_OLLAMA_VISION_MAX_TOKENS))
+    max_tokens = int(raw)
+    return max_tokens
+
+
+def get_ollama_vision_timeout_seconds() -> int:
+    raw = os.environ.get('OLLAMA_VISION_TIMEOUT_SECONDS', str(DEFAULT_OLLAMA_VISION_TIMEOUT_SECONDS))
+    timeout = int(raw)
+    return timeout
 
 
 def get_vision_max_pdf_pages() -> int:
     raw = os.environ.get('VISION_MAX_PDF_PAGES', str(DEFAULT_VISION_MAX_PDF_PAGES))
     max_pages = int(raw)
     return max_pages
+
+
+def get_vision_max_image_edge() -> int:
+    raw = os.environ.get('VISION_MAX_IMAGE_EDGE', str(DEFAULT_VISION_MAX_IMAGE_EDGE))
+    max_edge = int(raw)
+    return max_edge
+
+
+def get_ollama_vision_num_ctx() -> int:
+    raw = os.environ.get('OLLAMA_VISION_NUM_CTX', str(DEFAULT_OLLAMA_VISION_NUM_CTX))
+    num_ctx = int(raw)
+    return num_ctx
 
 
 def get_alchemy_config() -> SQLAlchemyAsyncConfig:
