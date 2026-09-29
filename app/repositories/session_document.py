@@ -19,3 +19,15 @@ class SessionDocumentRepo(SQLAlchemyAsyncRepository[SessionDocument]):
         result = await self.session.execute(statement)
         document = result.scalar_one_or_none()
         return document
+
+    async def list_for_session(self, chat_session_id: uuid.UUID) -> list[SessionDocument]:
+        statement = select(SessionDocument)
+        statement = statement.where(SessionDocument.chat_session_id == chat_session_id)
+        statement = statement.order_by(SessionDocument.created_at.desc())
+        result = await self.session.execute(statement)
+        scalars = result.scalars()
+        rows = scalars.all()
+        documents: list[SessionDocument] = []
+        for document in rows:
+            documents.append(document)
+        return documents

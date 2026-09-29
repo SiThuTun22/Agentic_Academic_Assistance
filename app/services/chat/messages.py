@@ -9,7 +9,7 @@ from app.repositories.chat_message import ChatMessageRepo
 from app.repositories.chat_session import ChatSessionRepo
 from app.repositories.session_document import SessionDocumentRepo
 from app.services.chat.session_title import maybe_autotitle_session
-from app.services.documents.context import build_document_context
+from app.services.documents.context import build_session_document_context
 
 
 @dataclass
@@ -32,15 +32,10 @@ async def send_message_exchange(
     user_message = ChatMessage(chat_session_id=session_id, role=MessageRole.USER, content=content)
     created_user = await chat_message_repo.add(user_message)
 
-    latest_document = await session_document_repo.get_latest_for_session(session_id)
-    document_context = None
-    if latest_document is not None:
-        document_context = build_document_context(
-            latest_document.extracted_text,
-            latest_document.vision_description,
-        )
-        if len(document_context) == 0:
-            document_context = None
+    documents = await session_document_repo.list_for_session(session_id)
+    document_context = build_session_document_context(documents)
+    if len(document_context) == 0:
+        document_context = None
 
     tutor_text = await generate_tutor_reply(chat_session, history, content, document_context)
 

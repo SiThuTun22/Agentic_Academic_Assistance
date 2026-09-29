@@ -1,6 +1,6 @@
 # Agentic Academic Assistant (AAA)
 
-Litestar backend + React UI (`aaa-ui/`) for a tutoring workspace with PDF upload, interactive document reading, and English Q&A via local Ollama.
+Litestar backend + React UI (`aaa-ui/`) for a tutoring workspace with PDF upload, interactive document reading, and English Q&A via Groq.
 
 ## Quick start
 
@@ -13,18 +13,9 @@ uv run main.py          # http://localhost:8000
 cd aaa-ui && npm install && npm run dev   # http://localhost:5173
 ```
 
-## Ollama (host, GPU)
+## Groq
 
-```bash
-docker rm -f aaa-ollama 2>/dev/null || true
-curl -fsSL https://ollama.com/install.sh | sh
-ollama pull qwen3:8b
-ollama pull qwen2.5vl:3b
-systemctl status ollama
-./scripts/verify-gpu-ollama.sh
-```
-
-Default API: `http://localhost:11434` (set in `.env`). Tutor chat uses `qwen3:8b`; PDF/image vision uses `qwen2.5vl:3b`.
+Set `GROQ_API_KEY` in `.env`. Tutor chat uses `openai/gpt-oss-20b`. Image vision uses `qwen/qwen3.8-27b`. Text PDFs are read with PyMuPDF and do not call the vision model.
 
 ## Product flow
 
@@ -53,26 +44,26 @@ Default API: `http://localhost:11434` (set in `.env`). Tutor chat uses `qwen3:8b
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `DATABASE_URL` | see `.env.example` | PostgreSQL async URL |
-| `JWT_SECRET` | `change-me-in-production` | JWT signing secret |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama API |
-| `OLLAMA_MODEL` | `qwen3:8b` | Tutor chat model tag |
-| `OLLAMA_VISION_MODEL` | `qwen2.5vl:3b` | Local vision model for PDF/image analysis |
-| `OLLAMA_TIMEOUT_SECONDS` | `120` | Tutor chat request timeout |
-| `OLLAMA_VISION_TIMEOUT_SECONDS` | `360` | Vision request timeout (first load can be slow) |
-| `OLLAMA_MAX_TOKENS` | `384` | Max tutor reply tokens |
-| `OLLAMA_VISION_MAX_TOKENS` | `512` | Max vision description tokens |
-| `OLLAMA_VISION_NUM_CTX` | `8192` | Vision model context window for Ollama |
-| `VISION_MAX_PDF_PAGES` | `2` | Max PDF pages sent to vision model |
+| `JWT_SECRET` | see `.env.example` | JWT signing secret. Must be at least 32 characters |
+| `GROQ_API_KEY` | _(empty)_ | Groq API key. Set this only in `.env` |
+| `GROQ_BASE_URL` | `https://api.groq.com/openai/v1` | Groq OpenAI-compatible API |
+| `GROQ_MODEL` | `openai/gpt-oss-20b` | Tutor chat model |
+| `GROQ_VISION_MODEL` | `qwen/qwen3.8-27b` | Image vision model |
+| `GROQ_TIMEOUT_SECONDS` | `120` | Tutor chat request timeout |
+| `GROQ_VISION_TIMEOUT_SECONDS` | `360` | Vision request timeout |
+| `GROQ_MAX_TOKENS` | `2048` | Max tutor reply tokens. Used when the variable is unset |
+| `GROQ_VISION_MAX_TOKENS` | `512` | Max vision description tokens |
+| `VISION_MAX_PDF_PAGES` | `0` | PDF pages sent to the vision model. `0` keeps PDFs text-only |
 | `VISION_MAX_IMAGE_EDGE` | `768` | Max pixel edge for vision images (avoids context overflow) |
 
 ## API overview
 
 - `POST /api/auth/register`, `POST /api/auth/login` — public
 - `GET/POST /api/chat-sessions` — sessions (JWT)
-- `POST /api/chat-sessions/{id}/documents` — PDF/image upload + processing (JWT + Ollama vision + Ollama tutor)
+- `POST /api/chat-sessions/{id}/documents` — PDF/image upload + processing (JWT + Groq)
 - `GET /api/chat-sessions/{id}/documents/latest` — latest document metadata
 - `GET /api/chat-sessions/{id}/documents/{doc_id}/file` — PDF file stream
-- `GET/POST /api/chat-sessions/{id}/messages` — tutor Q&A (JWT + Ollama on POST)
+- `GET/POST /api/chat-sessions/{id}/messages` — tutor Q&A (JWT + Groq on POST)
 
 ## Database reset
 

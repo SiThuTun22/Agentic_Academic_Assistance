@@ -479,7 +479,7 @@ export function Workspace() {
       let message = "Failed to send message.";
       if (error instanceof ApiRequestError) {
         if (error.status === 503) {
-          message = error.message || "Local AI (Ollama) is not running.";
+          message = error.message || "Groq is unavailable.";
         } else {
           message = error.message;
         }
@@ -521,7 +521,7 @@ export function Workspace() {
       let message = "Failed to upload file.";
       if (error instanceof ApiRequestError) {
         if (error.status === 503) {
-          message = error.message || "Local AI (Ollama) is not running.";
+          message = error.message || "Groq is unavailable.";
         } else {
           message = error.message;
         }

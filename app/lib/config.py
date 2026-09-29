@@ -9,16 +9,15 @@ from dotenv import load_dotenv
 
 DEFAULT_DATABASE_URL = 'postgresql+asyncpg://aaa:aaa@localhost:5434/aaa'
 DEFAULT_JWT_SECRET = 'change-me-in-production'
-DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434'
-DEFAULT_OLLAMA_MODEL = 'qwen3:8b'
-DEFAULT_OLLAMA_TIMEOUT_SECONDS = 120
-DEFAULT_OLLAMA_MAX_TOKENS = 384
-DEFAULT_OLLAMA_VISION_MODEL = 'qwen2.5vl:3b'
-DEFAULT_OLLAMA_VISION_MAX_TOKENS = 512
-DEFAULT_OLLAMA_VISION_TIMEOUT_SECONDS = 360
-DEFAULT_VISION_MAX_PDF_PAGES = 2
+DEFAULT_GROQ_BASE_URL = 'https://api.groq.com/openai/v1'
+DEFAULT_GROQ_MODEL = 'openai/gpt-oss-20b'
+DEFAULT_GROQ_TIMEOUT_SECONDS = 120
+DEFAULT_GROQ_MAX_TOKENS = 2048
+DEFAULT_GROQ_VISION_MODEL = 'qwen/qwen3.8-27b'
+DEFAULT_GROQ_VISION_MAX_TOKENS = 512
+DEFAULT_GROQ_VISION_TIMEOUT_SECONDS = 360
+DEFAULT_VISION_MAX_PDF_PAGES = 0
 DEFAULT_VISION_MAX_IMAGE_EDGE = 768
-DEFAULT_OLLAMA_VISION_NUM_CTX = 8192
 APP_VERSION = '0.1.0'
 MIGRATION_PATH = 'migrations'
 _env_path = Path('.env')
@@ -35,48 +34,58 @@ def get_jwt_secret() -> str:
     return secret
 
 
-def get_ollama_base_url() -> str:
-    base_url = os.environ.get('OLLAMA_BASE_URL', DEFAULT_OLLAMA_BASE_URL)
+def get_groq_api_key() -> str:
+    api_key = os.environ.get('GROQ_API_KEY', '')
+    return api_key
+
+
+def get_groq_base_url() -> str:
+    base_url = os.environ.get('GROQ_BASE_URL', DEFAULT_GROQ_BASE_URL)
     return base_url
 
 
-def get_ollama_chat_endpoint() -> str:
-    base_url = get_ollama_base_url()
+def get_groq_chat_completions_endpoint() -> str:
+    base_url = get_groq_base_url()
     base_stripped = base_url.rstrip('/')
-    endpoint = f'{base_stripped}/api/chat'
+    endpoint = f'{base_stripped}/chat/completions'
     return endpoint
 
 
-def get_ollama_model() -> str:
-    model = os.environ.get('OLLAMA_MODEL', DEFAULT_OLLAMA_MODEL)
+def get_groq_model() -> str:
+    model = os.environ.get('GROQ_MODEL', DEFAULT_GROQ_MODEL)
     return model
 
 
-def get_ollama_timeout_seconds() -> int:
-    raw = os.environ.get('OLLAMA_TIMEOUT_SECONDS', str(DEFAULT_OLLAMA_TIMEOUT_SECONDS))
+def get_groq_timeout_seconds() -> int:
+    raw = os.environ.get('GROQ_TIMEOUT_SECONDS', str(DEFAULT_GROQ_TIMEOUT_SECONDS))
     timeout = int(raw)
     return timeout
 
 
-def get_ollama_max_tokens() -> int:
-    raw = os.environ.get('OLLAMA_MAX_TOKENS', str(DEFAULT_OLLAMA_MAX_TOKENS))
-    max_tokens = int(raw)
+def get_groq_max_tokens() -> int:
+    raw = os.environ.get('GROQ_MAX_TOKENS')
+    if raw is None:
+        return DEFAULT_GROQ_MAX_TOKENS
+    stripped = raw.strip()
+    if len(stripped) == 0:
+        return DEFAULT_GROQ_MAX_TOKENS
+    max_tokens = int(stripped)
     return max_tokens
 
 
-def get_ollama_vision_model() -> str:
-    model = os.environ.get('OLLAMA_VISION_MODEL', DEFAULT_OLLAMA_VISION_MODEL)
+def get_groq_vision_model() -> str:
+    model = os.environ.get('GROQ_VISION_MODEL', DEFAULT_GROQ_VISION_MODEL)
     return model
 
 
-def get_ollama_vision_max_tokens() -> int:
-    raw = os.environ.get('OLLAMA_VISION_MAX_TOKENS', str(DEFAULT_OLLAMA_VISION_MAX_TOKENS))
+def get_groq_vision_max_tokens() -> int:
+    raw = os.environ.get('GROQ_VISION_MAX_TOKENS', str(DEFAULT_GROQ_VISION_MAX_TOKENS))
     max_tokens = int(raw)
     return max_tokens
 
 
-def get_ollama_vision_timeout_seconds() -> int:
-    raw = os.environ.get('OLLAMA_VISION_TIMEOUT_SECONDS', str(DEFAULT_OLLAMA_VISION_TIMEOUT_SECONDS))
+def get_groq_vision_timeout_seconds() -> int:
+    raw = os.environ.get('GROQ_VISION_TIMEOUT_SECONDS', str(DEFAULT_GROQ_VISION_TIMEOUT_SECONDS))
     timeout = int(raw)
     return timeout
 
@@ -91,12 +100,6 @@ def get_vision_max_image_edge() -> int:
     raw = os.environ.get('VISION_MAX_IMAGE_EDGE', str(DEFAULT_VISION_MAX_IMAGE_EDGE))
     max_edge = int(raw)
     return max_edge
-
-
-def get_ollama_vision_num_ctx() -> int:
-    raw = os.environ.get('OLLAMA_VISION_NUM_CTX', str(DEFAULT_OLLAMA_VISION_NUM_CTX))
-    num_ctx = int(raw)
-    return num_ctx
 
 
 def get_alchemy_config() -> SQLAlchemyAsyncConfig:

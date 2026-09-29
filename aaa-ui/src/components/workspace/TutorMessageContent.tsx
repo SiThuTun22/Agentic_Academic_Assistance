@@ -1,5 +1,6 @@
 import type { Components } from "react-markdown";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface TutorMessageContentProps {
   content: string;
@@ -29,6 +30,13 @@ const markdownComponents: Components = {
     return <code className="bubble-md-code-inline" {...props}>{children}</code>;
   },
   pre: (props) => <pre className="bubble-md-pre" {...props} />,
+  table: (props) => (
+    <div className="bubble-md-table-wrap">
+      <table {...props} className="bubble-md-table" />
+    </div>
+  ),
+  th: (props) => <th {...props} className="bubble-md-th" />,
+  td: (props) => <td {...props} className="bubble-md-td" />,
 };
 
 export function TutorMessageContent(props: TutorMessageContentProps) {
@@ -38,7 +46,9 @@ export function TutorMessageContent(props: TutorMessageContentProps) {
 
   return (
     <div className="bubble-markdown">
-      <Markdown components={markdownComponents}>{props.content}</Markdown>
+      <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+        {props.content}
+      </Markdown>
     </div>
   );
 }

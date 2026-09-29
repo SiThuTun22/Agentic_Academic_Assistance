@@ -3,7 +3,7 @@ from __future__ import annotations
 from langchain_core.output_parsers import StrOutputParser
 
 from app.ai.errors import LlmUnavailableError
-from app.ai.llm import get_chat_model, invoke_ollama
+from app.ai.llm import get_chat_model, invoke_chat
 from app.ai.prompts import TUTOR_PROMPT, system_prompt_for_tone
 from app.db.models import ChatMessage, ChatSession
 from app.db.enums import MessageRole
@@ -52,13 +52,13 @@ async def generate_tutor_reply(
         'user_content': user_content,
     }
 
-    reply = await invoke_ollama(tutor_chain, payload)
+    reply = await invoke_chat(tutor_chain, payload)
 
     if not isinstance(reply, str):
-        raise LlmUnavailableError('Ollama returned an unexpected tutor response.')
+        raise LlmUnavailableError('Groq returned an unexpected tutor response.')
 
     trimmed = reply.strip()
     if len(trimmed) == 0:
-        raise LlmUnavailableError('Ollama returned an empty tutor response.')
+        raise LlmUnavailableError('Groq returned an empty tutor response.')
 
     return trimmed

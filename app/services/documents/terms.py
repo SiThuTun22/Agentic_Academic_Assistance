@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from app.ai.document_terms import DocumentTerm, DocumentTermsResult
 from app.ai.errors import LlmUnavailableError
-from app.ai.llm import get_chat_model, invoke_ollama
+from app.ai.llm import get_chat_model, invoke_chat
 from app.services.documents.context import truncate_document_context
 
 TERM_PROMPT = ChatPromptTemplate.from_messages(
@@ -28,13 +28,13 @@ async def extract_document_terms(extracted_text: str) -> list[DocumentTerm]:
     term_chain = TERM_PROMPT | structured_model
     payload = {'document_text': truncate_document_context(extracted_text)}
 
-    result = await invoke_ollama(term_chain, payload)
+    result = await invoke_chat(term_chain, payload)
 
     if isinstance(result, DocumentTermsResult):
         parsed = result
     elif isinstance(result, dict):
         parsed = DocumentTermsResult.model_validate(result)
     else:
-        raise LlmUnavailableError('Ollama returned an unexpected document term response.')
+        raise LlmUnavailableError('Groq returned an unexpected document term response.')
 
     return parsed.terms

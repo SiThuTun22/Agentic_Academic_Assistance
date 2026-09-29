@@ -4,7 +4,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.ai.errors import LlmUnavailableError
-from app.ai.llm import get_chat_model, invoke_ollama
+from app.ai.llm import get_chat_model, invoke_chat
 
 DEFAULT_SESSION_TITLE = 'New chat'
 _TITLE_SOURCE_MAX_CHARS = 800
@@ -85,7 +85,7 @@ async def generate_session_title(source_text: str) -> str:
     }
 
     try:
-        reply = await invoke_ollama(title_chain, payload)
+        reply = await invoke_chat(title_chain, payload)
     except LlmUnavailableError:
         fallback = fallback_session_title(truncated_source)
         return fallback

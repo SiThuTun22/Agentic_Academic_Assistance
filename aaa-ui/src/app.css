@@ -667,6 +667,31 @@ body {
   color: var(--text-on-code);
 }
 
+.bubble-md-table-wrap {
+  margin: 0 0 8px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.bubble-md-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.bubble-md-th,
+.bubble-md-td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.bubble-md-th {
+  font-weight: 600;
+  background: var(--bg-code);
+}
+
 .thinking-indicator {
   align-self: flex-start;
 }
