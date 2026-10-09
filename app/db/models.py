@@ -3,7 +3,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, Uuid, func
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -51,4 +52,25 @@ class ChatMessage(Base):
     chat_session_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey('chat_sessions.id', ondelete='CASCADE'))
     role: Mapped[MessageRole] = mapped_column(String(50), default=MessageRole.USER)
     content: Mapped[str] = mapped_column(Text)
+    tutor_avatar: Mapped[TutorAvatar | None] = mapped_column(String(50), nullable=True)
+    document_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid,
+        ForeignKey('session_documents.id', ondelete='SET NULL'),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class KnowledgeChunkRow(Base):
+    __tablename__ = 'knowledge_chunks'
+    __table_args__ = (
+        UniqueConstraint('source_file', 'record_id', name='uq_knowledge_chunks_source_record'),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    category: Mapped[str] = mapped_column(String(50), index=True)
+    source_file: Mapped[str] = mapped_column(String(1000))
+    record_id: Mapped[str] = mapped_column(String(255))
+    text: Mapped[str] = mapped_column(Text)
+    sources: Mapped[list[str]] = mapped_column(JSON)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    embedding: Mapped[list[float]] = mapped_column(Vector(768))

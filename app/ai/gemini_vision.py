@@ -6,12 +6,11 @@ import logging
 import httpx
 
 from app.ai.errors import LlmUnavailableError
+from app.ai.gemini_pool import get_gemini_key_pool, is_quota_error
 from app.lib.config import (
-    get_groq_api_key,
-    get_groq_chat_completions_endpoint,
-    get_groq_vision_max_tokens,
-    get_groq_vision_model,
-    get_groq_vision_timeout_seconds,
+    get_gemini_vision_max_tokens,
+    get_gemini_vision_model,
+    get_gemini_vision_timeout_seconds,
 )
 from app.services.documents.image_prepare import (
     prepare_image_bytes_for_vision,
@@ -29,7 +28,8 @@ _VISION_EXTRACT_PROMPT = (
     'Write a detailed plain-text description only. Do not tutor the student.'
 )
 
-_VISION_DOWN = 'Groq vision request failed. Check GROQ_API_KEY and GROQ_VISION_MODEL.'
+_VISION_DOWN = 'Gemini vision request failed. Check GEMINI_API_KEYS and GEMINI_VISION_MODEL.'
+_GENERATE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent'
 
 logger = logging.getLogger(__name__)
 
@@ -40,112 +40,85 @@ def _encode_image(image_bytes: bytes) -> str:
     return encoded_text
 
 
-def _text_from_groq_body(body: object) -> str:
+def _text_from_gemini_body(body: object) -> str:
     if not isinstance(body, dict):
-        raise LlmUnavailableError('Groq returned an invalid vision response.')
+        raise LlmUnavailableError('Gemini returned an invalid vision response.')
 
-    choices = body.get('choices')
-    if not isinstance(choices, list) or len(choices) == 0:
-        raise LlmUnavailableError('Groq returned an invalid vision response.')
+    candidates = body.get('candidates')
+    if not isinstance(candidates, list) or len(candidates) == 0:
+        raise LlmUnavailableError('Gemini returned an invalid vision response.')
 
-    first_choice = choices[0]
-    if not isinstance(first_choice, dict):
-        raise LlmUnavailableError('Groq returned an invalid vision response.')
+    first_candidate = candidates[0]
+    if not isinstance(first_candidate, dict):
+        raise LlmUnavailableError('Gemini returned an invalid vision response.')
 
-    message = first_choice.get('message')
-    if not isinstance(message, dict):
-        raise LlmUnavailableError('Groq returned an invalid vision message.')
+    content = first_candidate.get('content')
+    if not isinstance(content, dict):
+        raise LlmUnavailableError('Gemini returned an invalid vision message.')
 
-    content = message.get('content')
-    if not isinstance(content, str):
-        raise LlmUnavailableError('Groq returned an invalid vision description.')
+    parts = content.get('parts')
+    if not isinstance(parts, list) or len(parts) == 0:
+        raise LlmUnavailableError('Gemini returned an invalid vision description.')
 
-    trimmed = content.strip()
-    if len(trimmed) == 0:
-        raise LlmUnavailableError('Groq returned an empty vision description.')
+    texts: list[str] = []
+    for part in parts:
+        if not isinstance(part, dict):
+            continue
+        text = part.get('text')
+        if isinstance(text, str) and len(text.strip()) > 0:
+            texts.append(text)
+
+    if len(texts) == 0:
+        raise LlmUnavailableError('Gemini returned an empty vision description.')
+
+    joined = '\n'.join(texts)
+    trimmed = joined.strip()
     return trimmed
-
-
-async def _describe_single_image(
-    client: httpx.AsyncClient,
-    endpoint: str,
-    model: str,
-    image_bytes: bytes,
-    max_tokens: int,
-) -> str:
-    prepared_bytes = prepare_image_bytes_for_vision(image_bytes)
-
-    try:
-        description = await _post_vision_request(
-            client,
-            endpoint,
-            model,
-            prepared_bytes,
-            max_tokens,
-        )
-    except LlmUnavailableError as error:
-        error_text = str(error)
-        context_too_large = 'exceed_context_size' in error_text or 'context size' in error_text
-        context_too_large = context_too_large or 'context_length' in error_text
-        if not context_too_large:
-            raise
-        logger.warning('Vision image exceeded context size; retrying with smaller image.')
-        smaller_bytes = prepare_image_bytes_for_vision_small(image_bytes)
-        description = await _post_vision_request(
-            client,
-            endpoint,
-            model,
-            smaller_bytes,
-            max_tokens,
-        )
-
-    return description
 
 
 async def _post_vision_request(
     client: httpx.AsyncClient,
-    endpoint: str,
     model: str,
+    api_key: str,
     image_bytes: bytes,
     max_tokens: int,
 ) -> str:
     encoded_text = _encode_image(image_bytes)
-    data_url = f'data:image/jpeg;base64,{encoded_text}'
 
-    text_part: dict[str, str] = {}
-    text_part['type'] = 'text'
-    text_part['text'] = _VISION_EXTRACT_PROMPT
+    prompt_part: dict[str, str] = {}
+    prompt_part['text'] = _VISION_EXTRACT_PROMPT
 
-    image_url: dict[str, str] = {}
-    image_url['url'] = data_url
+    inline_data: dict[str, str] = {}
+    inline_data['mime_type'] = 'image/jpeg'
+    inline_data['data'] = encoded_text
+
     image_part: dict[str, object] = {}
-    image_part['type'] = 'image_url'
-    image_part['image_url'] = image_url
+    image_part['inline_data'] = inline_data
 
-    content_parts: list[object] = []
-    content_parts.append(text_part)
-    content_parts.append(image_part)
+    parts: list[object] = []
+    parts.append(prompt_part)
+    parts.append(image_part)
 
-    user_message: dict[str, object] = {}
-    user_message['role'] = 'user'
-    user_message['content'] = content_parts
+    content: dict[str, object] = {}
+    content['parts'] = parts
+
+    generation_config: dict[str, object] = {}
+    generation_config['temperature'] = 0
+    generation_config['maxOutputTokens'] = max_tokens
 
     payload: dict[str, object] = {}
-    payload['model'] = model
-    payload['messages'] = [user_message]
-    payload['max_tokens'] = max_tokens
-    payload['temperature'] = 0
+    payload['contents'] = [content]
+    payload['generationConfig'] = generation_config
 
-    api_key = get_groq_api_key()
-    if len(api_key) == 0:
-        raise LlmUnavailableError('GROQ_API_KEY is not set.')
+    url_template = _GENERATE_URL
+    url = url_template.format(model=model)
+    params: dict[str, str] = {}
+    params['key'] = api_key
 
-    headers: dict[str, str] = {}
-    headers['Content-Type'] = 'application/json'
-    headers['Authorization'] = f'Bearer {api_key}'
+    response = await client.post(url, params=params, json=payload)
 
-    response = await client.post(endpoint, headers=headers, json=payload)
-
+    if response.status_code == 429:
+        raise LlmUnavailableError(f'{_VISION_DOWN} (429): {response.text}')
     if response.status_code >= 400:
         detail = response.text
         raise LlmUnavailableError(f'{_VISION_DOWN} ({response.status_code}): {detail}')
@@ -153,15 +126,62 @@ async def _post_vision_request(
     try:
         body = response.json()
     except ValueError as error:
-        raise LlmUnavailableError('Groq returned an invalid vision response.') from error
+        raise LlmUnavailableError('Gemini returned an invalid vision response.') from error
 
-    description = _text_from_groq_body(body)
+    description = _text_from_gemini_body(body)
     return description
+
+
+async def _describe_single_image(
+    client: httpx.AsyncClient,
+    model: str,
+    image_bytes: bytes,
+    max_tokens: int,
+) -> str:
+    prepared_bytes = prepare_image_bytes_for_vision(image_bytes)
+    pool = get_gemini_key_pool()
+    worker_count = pool.worker_count()
+    last_error: LlmUnavailableError | None = None
+    attempt = 0
+    while attempt < worker_count:
+        api_key = pool.acquire()
+        try:
+            description = await _post_vision_request(
+                client,
+                model,
+                api_key,
+                prepared_bytes,
+                max_tokens,
+            )
+            return description
+        except LlmUnavailableError as error:
+            if is_quota_error(error):
+                pool.mark_cooling(api_key)
+                last_error = error
+                attempt = attempt + 1
+                continue
+            error_text = str(error)
+            context_too_large = 'exceed_context_size' in error_text or 'context size' in error_text
+            context_too_large = context_too_large or 'context_length' in error_text
+            if not context_too_large:
+                raise
+            logger.warning('Vision image exceeded context size; retrying with smaller image.')
+            smaller_bytes = prepare_image_bytes_for_vision_small(image_bytes)
+            description = await _post_vision_request(
+                client,
+                model,
+                api_key,
+                smaller_bytes,
+                max_tokens,
+            )
+            return description
+    if last_error is not None:
+        raise last_error
+    raise LlmUnavailableError(_VISION_DOWN)
 
 
 async def _describe_image_with_retry(
     client: httpx.AsyncClient,
-    endpoint: str,
     model: str,
     image_bytes: bytes,
     max_tokens: int,
@@ -169,7 +189,6 @@ async def _describe_image_with_retry(
     try:
         description = await _describe_single_image(
             client,
-            endpoint,
             model,
             image_bytes,
             max_tokens,
@@ -181,7 +200,6 @@ async def _describe_image_with_retry(
     try:
         description = await _describe_single_image(
             client,
-            endpoint,
             model,
             image_bytes,
             max_tokens,
@@ -197,12 +215,10 @@ async def extract_vision_description(image_bytes_list: list[bytes]) -> str:
     if len(image_bytes_list) == 0:
         return ''
 
-    model = get_groq_vision_model()
-    endpoint = get_groq_chat_completions_endpoint()
-
-    timeout_seconds = get_groq_vision_timeout_seconds()
+    model = get_gemini_vision_model()
+    timeout_seconds = get_gemini_vision_timeout_seconds()
     timeout_value = httpx.Timeout(float(timeout_seconds), connect=10.0)
-    max_tokens = get_groq_vision_max_tokens()
+    max_tokens = get_gemini_vision_max_tokens()
 
     descriptions: list[str] = []
     last_error: LlmUnavailableError | None = None
@@ -216,7 +232,6 @@ async def extract_vision_description(image_bytes_list: list[bytes]) -> str:
                     try:
                         description = await _describe_image_with_retry(
                             client,
-                            endpoint,
                             model,
                             image_bytes,
                             max_tokens,
@@ -241,8 +256,8 @@ async def extract_vision_description(image_bytes_list: list[bytes]) -> str:
             )
         else:
             timeout_message = (
-                f'Groq vision timed out after {timeout_seconds}s. '
-                'Increase GROQ_VISION_TIMEOUT_SECONDS.'
+                f'Gemini vision timed out after {timeout_seconds}s. '
+                'Increase GEMINI_VISION_TIMEOUT_SECONDS.'
             )
             raise LlmUnavailableError(timeout_message) from error
     except (httpx.ConnectError, OSError) as error:

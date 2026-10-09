@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from langchain_core.output_parsers import StrOutputParser
+import re
 
-from app.ai.errors import LlmUnavailableError
-from app.ai.llm import get_chat_model, invoke_chat
-from app.ai.prompts import TUTOR_PROMPT, system_prompt_for_tone
-from app.db.models import ChatMessage, ChatSession
+from app.agents.graph import run_tutor_graph
+from app.ai.prompts import pick_delivery_style, system_prompt_for_tone
 from app.db.enums import MessageRole
+from app.db.models import ChatMessage, ChatSession
+
+_LEADING_PARTICLES = ('ခင်ဗျာ', 'ရှင်', 'ဗျာ')
+_LEADING_TRAIL = '၊, \t\n\r'
+_FINAL_PARTICLE_PATTERN = re.compile(r'(ခင်ဗျာ|ရှင်|ဗျာ)(\s*)(။|\?|!)')
 
 
 def _format_history(history: list[ChatMessage]) -> str:
@@ -35,30 +38,70 @@ def _format_document_context(document_context: str | None) -> str:
     return trimmed
 
 
+def strip_leading_polite_particles(text: str) -> str:
+    cleaned = text.lstrip()
+    while True:
+        matched = False
+        for particle in _LEADING_PARTICLES:
+            if not cleaned.startswith(particle):
+                continue
+            rest = cleaned[len(particle) :]
+            rest = rest.lstrip(_LEADING_TRAIL)
+            cleaned = rest
+            matched = True
+            break
+        if not matched:
+            break
+    return cleaned
+
+
+def thin_sentence_final_particles(text: str) -> str:
+    matches = list(_FINAL_PARTICLE_PATTERN.finditer(text))
+    if len(matches) <= 1:
+        return text
+    last_match = matches[-1]
+    last_start = last_match.start()
+    pieces: list[str] = []
+    cursor = 0
+    for match in matches:
+        if match.start() == last_start:
+            break
+        prefix = text[cursor : match.start()]
+        space_part = match.group(2)
+        end_mark = match.group(3)
+        pieces.append(prefix)
+        already_polite = prefix.endswith('ပါ') or prefix.endswith('တယ်')
+        if not already_polite:
+            pieces.append('ပါ')
+        pieces.append(space_part)
+        pieces.append(end_mark)
+        cursor = match.end()
+    tail = text[cursor:]
+    pieces.append(tail)
+    joined = ''.join(pieces)
+    return joined
+
+
 async def generate_tutor_reply(
     chat_session: ChatSession,
     history: list[ChatMessage],
     user_content: str,
     document_context: str | None = None,
 ) -> str:
-    chat_model = get_chat_model()
-    output_parser = StrOutputParser()
-    tutor_chain = TUTOR_PROMPT | chat_model | output_parser
-
-    payload = {
-        'system_prompt': system_prompt_for_tone(chat_session.tutor_tone),
-        'document_context': _format_document_context(document_context),
-        'message_history': _format_history(history),
-        'user_content': user_content,
-    }
-
-    reply = await invoke_chat(tutor_chain, payload)
-
-    if not isinstance(reply, str):
-        raise LlmUnavailableError('Groq returned an unexpected tutor response.')
-
-    trimmed = reply.strip()
-    if len(trimmed) == 0:
-        raise LlmUnavailableError('Groq returned an empty tutor response.')
-
-    return trimmed
+    system_prompt = system_prompt_for_tone(
+        chat_session.tutor_tone,
+        chat_session.tutor_avatar,
+    )
+    history_text = _format_history(history)
+    document_text = _format_document_context(document_context)
+    delivery_style = pick_delivery_style()
+    reply = await run_tutor_graph(
+        user_content,
+        history_text,
+        document_text,
+        system_prompt,
+        delivery_style,
+    )
+    cleaned_reply = strip_leading_polite_particles(reply)
+    cleaned_reply = thin_sentence_final_particles(cleaned_reply)
+    return cleaned_reply

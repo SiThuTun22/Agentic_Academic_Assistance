@@ -9,15 +9,19 @@ from dotenv import load_dotenv
 
 DEFAULT_DATABASE_URL = 'postgresql+asyncpg://aaa:aaa@localhost:5434/aaa'
 DEFAULT_JWT_SECRET = 'change-me-in-production'
-DEFAULT_GROQ_BASE_URL = 'https://api.groq.com/openai/v1'
-DEFAULT_GROQ_MODEL = 'openai/gpt-oss-20b'
-DEFAULT_GROQ_TIMEOUT_SECONDS = 120
-DEFAULT_GROQ_MAX_TOKENS = 2048
-DEFAULT_GROQ_VISION_MODEL = 'qwen/qwen3.8-27b'
-DEFAULT_GROQ_VISION_MAX_TOKENS = 512
-DEFAULT_GROQ_VISION_TIMEOUT_SECONDS = 360
+DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash'
+DEFAULT_GEMINI_TIMEOUT_SECONDS = 120
+DEFAULT_GEMINI_MAX_TOKENS = 2048
+DEFAULT_GEMINI_VISION_MAX_TOKENS = 512
+DEFAULT_GEMINI_VISION_TIMEOUT_SECONDS = 360
 DEFAULT_VISION_MAX_PDF_PAGES = 0
 DEFAULT_VISION_MAX_IMAGE_EDGE = 768
+DEFAULT_GEMINI_COOLING_SECONDS = 60
+DEFAULT_GEMINI_TUTOR_TEMPERATURE = 0.8
+DEFAULT_GEMINI_EMBEDDING_MODEL = 'gemini-embedding-001'
+DEFAULT_GEMINI_EMBEDDING_DIMS = 768
+DEFAULT_RAG_TOP_K = 5
+DEFAULT_TTS_ENGLISH_RATE = '-5%'
 APP_VERSION = '0.1.0'
 MIGRATION_PATH = 'migrations'
 _env_path = Path('.env')
@@ -34,60 +38,74 @@ def get_jwt_secret() -> str:
     return secret
 
 
-def get_groq_api_key() -> str:
-    api_key = os.environ.get('GROQ_API_KEY', '')
-    return api_key
+def get_gemini_api_keys() -> list[str]:
+    raw = os.environ.get('GEMINI_API_KEYS', '')
+    if len(raw.strip()) == 0:
+        single = os.environ.get('GEMINI_API_KEY', '')
+        raw = single
+    parts = raw.split(',')
+    keys: list[str] = []
+    for part in parts:
+        stripped = part.strip()
+        if len(stripped) == 0:
+            continue
+        keys.append(stripped)
+    return keys
 
 
-def get_groq_base_url() -> str:
-    base_url = os.environ.get('GROQ_BASE_URL', DEFAULT_GROQ_BASE_URL)
-    return base_url
-
-
-def get_groq_chat_completions_endpoint() -> str:
-    base_url = get_groq_base_url()
-    base_stripped = base_url.rstrip('/')
-    endpoint = f'{base_stripped}/chat/completions'
-    return endpoint
-
-
-def get_groq_model() -> str:
-    model = os.environ.get('GROQ_MODEL', DEFAULT_GROQ_MODEL)
+def get_gemini_model() -> str:
+    model = os.environ.get('GEMINI_MODEL', DEFAULT_GEMINI_MODEL)
     return model
 
 
-def get_groq_timeout_seconds() -> int:
-    raw = os.environ.get('GROQ_TIMEOUT_SECONDS', str(DEFAULT_GROQ_TIMEOUT_SECONDS))
+def get_gemini_vision_model() -> str:
+    vision_model = os.environ.get('GEMINI_VISION_MODEL', '')
+    stripped = vision_model.strip()
+    if len(stripped) == 0:
+        chat_model = get_gemini_model()
+        return chat_model
+    return stripped
+
+
+def get_gemini_timeout_seconds() -> int:
+    raw = os.environ.get('GEMINI_TIMEOUT_SECONDS', str(DEFAULT_GEMINI_TIMEOUT_SECONDS))
     timeout = int(raw)
     return timeout
 
 
-def get_groq_max_tokens() -> int:
-    raw = os.environ.get('GROQ_MAX_TOKENS')
+def get_gemini_max_tokens() -> int:
+    raw = os.environ.get('GEMINI_MAX_TOKENS')
     if raw is None:
-        return DEFAULT_GROQ_MAX_TOKENS
+        return DEFAULT_GEMINI_MAX_TOKENS
     stripped = raw.strip()
     if len(stripped) == 0:
-        return DEFAULT_GROQ_MAX_TOKENS
+        return DEFAULT_GEMINI_MAX_TOKENS
     max_tokens = int(stripped)
     return max_tokens
 
 
-def get_groq_vision_model() -> str:
-    model = os.environ.get('GROQ_VISION_MODEL', DEFAULT_GROQ_VISION_MODEL)
-    return model
-
-
-def get_groq_vision_max_tokens() -> int:
-    raw = os.environ.get('GROQ_VISION_MAX_TOKENS', str(DEFAULT_GROQ_VISION_MAX_TOKENS))
+def get_gemini_vision_max_tokens() -> int:
+    raw = os.environ.get('GEMINI_VISION_MAX_TOKENS', str(DEFAULT_GEMINI_VISION_MAX_TOKENS))
     max_tokens = int(raw)
     return max_tokens
 
 
-def get_groq_vision_timeout_seconds() -> int:
-    raw = os.environ.get('GROQ_VISION_TIMEOUT_SECONDS', str(DEFAULT_GROQ_VISION_TIMEOUT_SECONDS))
+def get_gemini_vision_timeout_seconds() -> int:
+    raw = os.environ.get('GEMINI_VISION_TIMEOUT_SECONDS', str(DEFAULT_GEMINI_VISION_TIMEOUT_SECONDS))
     timeout = int(raw)
     return timeout
+
+
+def get_gemini_cooling_seconds() -> float:
+    raw = os.environ.get('GEMINI_COOLING_SECONDS', str(DEFAULT_GEMINI_COOLING_SECONDS))
+    cooling = float(raw)
+    return cooling
+
+
+def get_gemini_tutor_temperature() -> float:
+    raw = os.environ.get('GEMINI_TUTOR_TEMPERATURE', str(DEFAULT_GEMINI_TUTOR_TEMPERATURE))
+    temperature = float(raw)
+    return temperature
 
 
 def get_vision_max_pdf_pages() -> int:
@@ -100,6 +118,77 @@ def get_vision_max_image_edge() -> int:
     raw = os.environ.get('VISION_MAX_IMAGE_EDGE', str(DEFAULT_VISION_MAX_IMAGE_EDGE))
     max_edge = int(raw)
     return max_edge
+
+
+def get_gemini_embedding_model() -> str:
+    model = os.environ.get('GEMINI_EMBEDDING_MODEL', DEFAULT_GEMINI_EMBEDDING_MODEL)
+    return model
+
+
+def get_gemini_embedding_dims() -> int:
+    raw = os.environ.get('GEMINI_EMBEDDING_DIMS', str(DEFAULT_GEMINI_EMBEDDING_DIMS))
+    dims = int(raw)
+    return dims
+
+
+def get_rag_top_k() -> int:
+    raw = os.environ.get('RAG_TOP_K', str(DEFAULT_RAG_TOP_K))
+    top_k = int(raw)
+    return top_k
+
+
+def get_tts_data_dir() -> Path:
+    raw = os.environ.get('TTS_DATA_DIR', '')
+    stripped = raw.strip()
+    if len(stripped) > 0:
+        data_dir = Path(stripped)
+        return data_dir
+    config_path = Path(__file__).resolve()
+    lib_dir = config_path.parent
+    app_dir = lib_dir.parent
+    project_root = app_dir.parent
+    data_dir = project_root / 'data'
+    return data_dir
+
+
+def get_tts_lexicon_path() -> Path:
+    data_dir = get_tts_data_dir()
+    lexicon_path = data_dir / 'tts_lexicon.json'
+    return lexicon_path
+
+
+def get_tts_spell_path() -> Path:
+    data_dir = get_tts_data_dir()
+    spell_path = data_dir / 'tts_spell.json'
+    return spell_path
+
+
+def get_tts_english_rate() -> str:
+    raw = os.environ.get('TTS_ENGLISH_RATE', DEFAULT_TTS_ENGLISH_RATE)
+    stripped = raw.strip()
+    if len(stripped) == 0:
+        return DEFAULT_TTS_ENGLISH_RATE
+    return stripped
+
+
+def get_tts_audio_dir() -> Path:
+    data_dir = get_tts_data_dir()
+    audio_dir = data_dir / 'tts-audio'
+    return audio_dir
+
+
+def get_knowledge_dir() -> Path:
+    raw = os.environ.get('KNOWLEDGE_DIR', '')
+    stripped = raw.strip()
+    if len(stripped) > 0:
+        knowledge_dir = Path(stripped)
+        return knowledge_dir
+    config_path = Path(__file__).resolve()
+    lib_dir = config_path.parent
+    app_dir = lib_dir.parent
+    project_root = app_dir.parent
+    knowledge_dir = project_root / 'knowledge'
+    return knowledge_dir
 
 
 def get_alchemy_config() -> SQLAlchemyAsyncConfig:

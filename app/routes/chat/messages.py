@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import uuid
 
-from advanced_alchemy.filters import LimitOffset
-from litestar import Request, Router, get, post
+from litestar import Request, Response, Router, get, post
+from litestar.exceptions import NotFoundException
 from litestar.params import Parameter
 from litestar.security.jwt import Token
 
 from app.ai.errors import LlmUnavailableError
+from app.ai.tts import resolve_speech_avatar, speech_bytes_for_message
+from app.db.enums import MessageRole
 from app.db.models import User
 from app.repositories import (
     ChatMessageRepo,
@@ -27,17 +29,25 @@ async def list_messages(
     request: Request[User, Token, None],
     chat_session_repo: ChatSessionRepo,
     chat_message_repo: ChatMessageRepo,
+    session_document_repo: SessionDocumentRepo,
     session_id: uuid.UUID,
     limit: int = Parameter(default=50, ge=1, le=200),
     offset: int = Parameter(default=0, ge=0),
 ) -> list[ChatMessageRead]:
     user = request.user
     await require_owned_session(chat_session_repo, session_id, user.id)
-    limit_offset = LimitOffset(limit=limit, offset=offset)
-    results = await chat_message_repo.get_many(limit_offset, chat_session_id=session_id)
+    session_documents = await session_document_repo.list_for_session(session_id)
+    filenames: dict[uuid.UUID, str] = {}
+    for document in session_documents:
+        filenames[document.id] = document.filename
+    results = await chat_message_repo.list_for_session(session_id, limit, offset)
     messages: list[ChatMessageRead] = []
     for message in results:
-        message_read = to_message_read(message)
+        filename: str | None = None
+        document_id = message.document_id
+        if document_id is not None:
+            filename = filenames.get(document_id)
+        message_read = to_message_read(message, filename)
         messages.append(message_read)
     return messages
 
@@ -77,9 +87,46 @@ async def create_message(
     return exchange
 
 
+@get('/{session_id:uuid}/messages/{message_id:uuid}/speech')
+async def get_message_speech(
+    request: Request[User, Token, None],
+    chat_session_repo: ChatSessionRepo,
+    chat_message_repo: ChatMessageRepo,
+    session_id: uuid.UUID,
+    message_id: uuid.UUID,
+) -> Response[bytes]:
+    user = request.user
+    chat_session = await require_owned_session(chat_session_repo, session_id, user.id)
+    message = await chat_message_repo.get_one_or_none(id=message_id, chat_session_id=session_id)
+    if message is None:
+        raise NotFoundException(detail=f'Message {message_id} not found')
+    role_value = str(message.role)
+    if role_value != MessageRole.ASSISTANT.value:
+        raise NotFoundException(detail=f'Message {message_id} not found')
+    try:
+        speech_avatar = resolve_speech_avatar(
+            message.tutor_avatar,
+            message.content,
+            chat_session.tutor_avatar,
+        )
+        audio_bytes = await speech_bytes_for_message(
+            message.id,
+            message.content,
+            speech_avatar,
+        )
+    except LlmUnavailableError as error:
+        raise_llm_unavailable(error)
+    response = Response(
+        content=audio_bytes,
+        media_type='audio/mpeg',
+        headers={'Content-Disposition': 'inline; filename="speech.mp3"'},
+    )
+    return response
+
+
 messages_router = Router(
     path='/api/chat-sessions',
-    route_handlers=[list_messages, create_message],
+    route_handlers=[list_messages, create_message, get_message_speech],
     dependencies={
         'chat_session_repo': provide_chat_session_repo_dep,
         'chat_message_repo': provide_chat_message_repo_dep,

@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import type { DocumentAnnotationRead, DocumentRead } from "../../lib/apiTypes";
 import { fetchDocumentBlobUrl, fetchDocumentFile } from "../../lib/api";
+import {
+  getCachedImageUrl,
+  getCachedPdfBuffer,
+  setCachedImageUrl,
+  setCachedPdfBuffer,
+} from "../../lib/documentFileCache";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -41,7 +47,6 @@ export function DocumentViewerPanel(props: DocumentViewerPanelProps) {
     }
 
     let cancelled = false;
-    let createdObjectUrl: string | null = null;
 
     async function loadDocument(): Promise<void> {
       setIsLoading(true);
@@ -54,17 +59,31 @@ export function DocumentViewerPanel(props: DocumentViewerPanelProps) {
 
       try {
         if (isImage) {
+          const cachedUrl = getCachedImageUrl(document.id);
+          if (cachedUrl !== null) {
+            if (cancelled) {
+              return;
+            }
+            setImageUrl(cachedUrl);
+            return;
+          }
           const objectUrl = await fetchDocumentBlobUrl(document.file_url);
-          createdObjectUrl = objectUrl;
+          setCachedImageUrl(document.id, objectUrl);
           if (cancelled) {
-            URL.revokeObjectURL(objectUrl);
             return;
           }
           setImageUrl(objectUrl);
           return;
         }
 
-        const fileBuffer = await fetchDocumentFile(document.file_url);
+        const cachedBuffer = getCachedPdfBuffer(document.id);
+        let fileBuffer: ArrayBuffer;
+        if (cachedBuffer !== null) {
+          fileBuffer = cachedBuffer;
+        } else {
+          fileBuffer = await fetchDocumentFile(document.file_url);
+          setCachedPdfBuffer(document.id, fileBuffer);
+        }
         const loadingTask = pdfjsLib.getDocument({ data: fileBuffer });
         const pdf = await loadingTask.promise;
         const nextPages: PageRenderState[] = [];
@@ -143,9 +162,6 @@ export function DocumentViewerPanel(props: DocumentViewerPanelProps) {
 
     return () => {
       cancelled = true;
-      if (createdObjectUrl !== null) {
-        URL.revokeObjectURL(createdObjectUrl);
-      }
     };
   }, [props.document]);
 

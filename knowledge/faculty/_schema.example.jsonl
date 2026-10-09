@@ -1,0 +1,1 @@
+{"id": "example-faculty-fact", "name": "Teacher Name", "role": "Professor", "department": "CSE", "text": "One fact about this teacher. Add a new .jsonl file per person.", "sources": ["https://example.com"]}

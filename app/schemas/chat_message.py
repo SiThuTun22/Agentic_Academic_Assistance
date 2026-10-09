@@ -4,7 +4,7 @@ import uuid
 
 from pydantic import BaseModel
 
-from app.db.enums import MessageRole
+from app.db.enums import MessageRole, TutorAvatar
 from app.schemas.chat_session import ChatSessionRead
 
 
@@ -17,6 +17,9 @@ class ChatMessageRead(BaseModel):
     chat_session_id: uuid.UUID
     role: MessageRole
     content: str
+    tutor_avatar: TutorAvatar | None = None
+    document_id: uuid.UUID | None = None
+    document_filename: str | None = None
 
 
 class ChatMessageExchangeRead(BaseModel):

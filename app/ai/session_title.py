@@ -3,8 +3,10 @@ from __future__ import annotations
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
+from langchain_google_genai import ChatGoogleGenerativeAI
+
 from app.ai.errors import LlmUnavailableError
-from app.ai.llm import get_chat_model, invoke_chat
+from app.ai.llm import invoke_llm
 
 DEFAULT_SESSION_TITLE = 'New chat'
 _TITLE_SOURCE_MAX_CHARS = 800
@@ -76,16 +78,17 @@ async def generate_session_title(source_text: str) -> str:
     if len(truncated_source) == 0:
         return DEFAULT_SESSION_TITLE
 
-    chat_model = get_chat_model()
-    output_parser = StrOutputParser()
-    title_chain = _TITLE_PROMPT | chat_model | output_parser
+    def make_title_runnable(chat_model: ChatGoogleGenerativeAI):
+        output_parser = StrOutputParser()
+        title_chain = _TITLE_PROMPT | chat_model | output_parser
+        return title_chain
 
     payload = {
         'source_text': truncated_source,
     }
 
     try:
-        reply = await invoke_chat(title_chain, payload)
+        reply = await invoke_llm(make_title_runnable, payload)
     except LlmUnavailableError:
         fallback = fallback_session_title(truncated_source)
         return fallback

@@ -22,12 +22,18 @@ async def require_owned_session(
     return chat_session
 
 
-def to_message_read(message: ChatMessage) -> ChatMessageRead:
+def to_message_read(
+    message: ChatMessage,
+    document_filename: str | None = None,
+) -> ChatMessageRead:
     message_read = ChatMessageRead(
         id=message.id,
         chat_session_id=message.chat_session_id,
         role=message.role,
         content=message.content,
+        tutor_avatar=message.tutor_avatar,
+        document_id=message.document_id,
+        document_filename=document_filename,
     )
     return message_read
 

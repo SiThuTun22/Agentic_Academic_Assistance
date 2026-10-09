@@ -26,23 +26,14 @@ function avatarLabel(avatar: TutorAvatar): string {
   return "Female tutor";
 }
 
-function toneLabel(tone: TutorTone): string {
-  if (tone === "strict_academic") {
-    return "Strict academic";
-  }
-  return "Socratic";
-}
-
 export function TutorSettingsMenu(props: TutorSettingsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [draftTone, setDraftTone] = useState<TutorTone>(props.tutorTone);
   const [draftAvatar, setDraftAvatar] = useState<TutorAvatar>(props.tutorAvatar);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setDraftTone(props.tutorTone);
     setDraftAvatar(props.tutorAvatar);
-  }, [props.tutorTone, props.tutorAvatar]);
+  }, [props.tutorAvatar]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -77,7 +68,7 @@ export function TutorSettingsMenu(props: TutorSettingsMenuProps) {
   const disabled = props.disabled === true;
   const isSaving = props.isSaving === true;
   const initial = avatarInitial(props.tutorAvatar);
-  const summary = `${toneLabel(props.tutorTone)} · ${avatarLabel(props.tutorAvatar)}`;
+  const summary = avatarLabel(props.tutorAvatar);
 
   let rootClass = "tutor-settings";
   if (isOpen) {
@@ -86,7 +77,7 @@ export function TutorSettingsMenu(props: TutorSettingsMenuProps) {
 
   async function handleSave(): Promise<void> {
     await props.onChange({
-      tutor_tone: draftTone,
+      tutor_tone: props.tutorTone,
       tutor_avatar: draftAvatar,
     });
     setIsOpen(false);
@@ -106,7 +97,6 @@ export function TutorSettingsMenu(props: TutorSettingsMenuProps) {
           if (disabled) {
             return;
           }
-          setDraftTone(props.tutorTone);
           setDraftAvatar(props.tutorAvatar);
           setIsOpen((prev) => !prev);
         }}
@@ -117,22 +107,6 @@ export function TutorSettingsMenu(props: TutorSettingsMenuProps) {
       {isOpen && (
         <div className="tutor-settings-panel" role="dialog" aria-label="Tutor settings">
           <p className="tutor-settings-heading">Tutor settings</p>
-
-          <label className="form-label" htmlFor="tutor-settings-tone">
-            Tone
-          </label>
-          <select
-            id="tutor-settings-tone"
-            className="form-input"
-            value={draftTone}
-            disabled={isSaving}
-            onChange={(event) => {
-              setDraftTone(event.target.value as TutorTone);
-            }}
-          >
-            <option value="socratic">Socratic</option>
-            <option value="strict_academic">Strict academic</option>
-          </select>
 
           <label className="form-label" htmlFor="tutor-settings-avatar">
             Avatar

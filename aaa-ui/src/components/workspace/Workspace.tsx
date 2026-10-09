@@ -15,7 +15,8 @@ import {
   createMessage,
   createSession,
   deleteSession,
-  getLatestDocument,
+  getDocument,
+  listDocuments,
   listMessages,
   listSessions,
   updateSession,
@@ -92,6 +93,7 @@ export function Workspace() {
   const layoutRef = useRef<HTMLDivElement | null>(null);
   const skipSessionHydrateRef = useRef(false);
   const panelAnimTimerRef = useRef<number | null>(null);
+  const documentCacheRef = useRef<Map<string, DocumentRead>>(new Map());
 
   const [themeMode, setThemeMode] = useState<ThemeMode>(() =>
     getInitialThemeMode(),
@@ -189,15 +191,27 @@ export function Workspace() {
     }
   }, []);
 
+  function cacheDocument(document: DocumentRead): void {
+    documentCacheRef.current.set(document.id, document);
+  }
+
+  function cacheDocuments(documents: DocumentRead[]): void {
+    for (const document of documents) {
+      cacheDocument(document);
+    }
+  }
+
   const loadDocument = useCallback(async (sessionId: string) => {
     try {
-      const document = await getLatestDocument(sessionId);
-      if (document === null) {
+      const documents = await listDocuments(sessionId);
+      cacheDocuments(documents);
+      if (documents.length === 0) {
         setCurrentDocument(null);
         setDocumentPanelOpen(false);
         return;
       }
-      setCurrentDocument(document);
+      const latest = documents[0];
+      setCurrentDocument(latest);
       setDocumentPanelOpen(true);
     } catch {
       setCurrentDocument(null);
@@ -479,7 +493,7 @@ export function Workspace() {
       let message = "Failed to send message.";
       if (error instanceof ApiRequestError) {
         if (error.status === 503) {
-          message = error.message || "Groq is unavailable.";
+          message = error.message || "Gemini is unavailable.";
         } else {
           message = error.message;
         }
@@ -494,14 +508,15 @@ export function Workspace() {
     }
   }
 
-  async function handleUploadPdf(file: File): Promise<void> {
+  async function handleUploadPdf(file: File, question: string): Promise<void> {
     setDocumentUploading(true);
     setMessagesError(null);
 
     try {
       const sessionId = await ensureActiveSessionId();
-      const result = await uploadDocument(sessionId, file);
+      const result = await uploadDocument(sessionId, file, question);
       upsertSession(result.session);
+      cacheDocument(result.document);
       if (!documentPanelOpen) {
         runPanelToggleAnimation(() => {
           setCurrentDocument(result.document);
@@ -521,7 +536,7 @@ export function Workspace() {
       let message = "Failed to upload file.";
       if (error instanceof ApiRequestError) {
         if (error.status === 503) {
-          message = error.message || "Groq is unavailable.";
+          message = error.message || "Gemini is unavailable.";
         } else {
           message = error.message;
         }
@@ -530,6 +545,32 @@ export function Workspace() {
       throw error;
     } finally {
       setDocumentUploading(false);
+    }
+  }
+
+  async function handleOpenDocument(documentId: string): Promise<void> {
+    if (activeSessionId === null) {
+      return;
+    }
+    const cached = documentCacheRef.current.get(documentId);
+    if (cached !== undefined) {
+      setCurrentDocument(cached);
+      setDocumentPanelOpen(true);
+      setActiveMobileTab("document");
+      return;
+    }
+    try {
+      const document = await getDocument(activeSessionId, documentId);
+      cacheDocument(document);
+      setCurrentDocument(document);
+      setDocumentPanelOpen(true);
+      setActiveMobileTab("document");
+    } catch (error) {
+      const message =
+        error instanceof ApiRequestError
+          ? error.message
+          : "Failed to open document.";
+      setMessagesError(message);
     }
   }
 
@@ -806,6 +847,8 @@ export function Workspace() {
           onUpdateTutorSettings={handleUpdateTutorSettings}
           onSend={handleSendMessage}
           onUploadPdf={handleUploadPdf}
+          onOpenDocument={handleOpenDocument}
+          currentDocumentId={currentDocument?.id ?? null}
           onRetryMessages={() => {
             if (activeSessionId !== null) {
               loadMessages(activeSessionId);

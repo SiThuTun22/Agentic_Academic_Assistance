@@ -4,8 +4,14 @@ from pydantic import BaseModel, Field
 
 
 class DocumentTerm(BaseModel):
-    term: str = Field(description='Important term or name from the document')
-    definition: str = Field(description='One-sentence explanation of the term')
+    term: str = Field(description='Important term or name from the document, in English')
+    definition: str = Field(
+        description=(
+            'One short, direct Myanmar sentence. '
+            'Keep computer science and programming words in English. '
+            'Do not use ရှင်, ဗျာ, ခင်ဗျာ, ကျွန်မ, or ကျွန်တော်.'
+        ),
+    )
 
 
 class DocumentTermsResult(BaseModel):

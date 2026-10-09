@@ -6,7 +6,7 @@ React UI for the AAA Litestar backend: login, then a workspace that starts as **
 
 - Node.js 18+
 - Backend at `http://localhost:8000` (see [`../README.md`](../README.md))
-- `GROQ_API_KEY` set in the backend `.env`
+- `GEMINI_API_KEYS` set in the backend `.env`
 
 ## Setup
 

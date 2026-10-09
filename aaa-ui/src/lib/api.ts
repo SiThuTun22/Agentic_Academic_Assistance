@@ -138,6 +138,19 @@ export function deleteSession(sessionId: string): Promise<void> {
   });
 }
 
+export function listDocuments(sessionId: string): Promise<DocumentRead[]> {
+  return request<DocumentRead[]>(`/api/chat-sessions/${sessionId}/documents`);
+}
+
+export function getDocument(
+  sessionId: string,
+  documentId: string,
+): Promise<DocumentRead> {
+  return request<DocumentRead>(
+    `/api/chat-sessions/${sessionId}/documents/${documentId}`,
+  );
+}
+
 export function getLatestDocument(
   sessionId: string,
 ): Promise<DocumentRead | null> {
@@ -149,9 +162,11 @@ export function getLatestDocument(
 export function uploadDocument(
   sessionId: string,
   file: File,
+  question: string = "",
 ): Promise<DocumentUploadRead> {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("question", question);
 
   return request<DocumentUploadRead>(
     `/api/chat-sessions/${sessionId}/documents`,
@@ -204,6 +219,36 @@ export async function fetchDocumentBlobUrl(fileUrl: string): Promise<string> {
   if (!response.ok) {
     throw new ApiRequestError(
       `Failed to load document (${response.status})`,
+      response.status,
+    );
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  return objectUrl;
+}
+
+export async function fetchMessageSpeechUrl(
+  sessionId: string,
+  messageId: string,
+): Promise<string> {
+  const headers = new Headers();
+  const token = getToken();
+  if (token !== null) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const speechPath = `/api/chat-sessions/${sessionId}/messages/${messageId}/speech`;
+  let response: Response;
+  try {
+    response = await fetch(speechPath, { headers });
+  } catch {
+    throw new NetworkError();
+  }
+
+  if (!response.ok) {
+    throw new ApiRequestError(
+      `Failed to load speech (${response.status})`,
       response.status,
     );
   }

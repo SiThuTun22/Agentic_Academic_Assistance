@@ -569,6 +569,68 @@ body {
   opacity: 0.7;
 }
 
+.bubble-file {
+  margin-top: 8px;
+}
+
+.bubble-file-chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bubble-file-chip:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.bubble-file-chip.is-active {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 1px;
+}
+
+.bubble-speech {
+  margin-top: 8px;
+}
+
+.speech-ear-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.speech-ear-button:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.speech-ear-button.is-active {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.speech-ear-icon {
+  display: block;
+}
+
 .bubble-text {
   margin: 0;
   font-size: 14px;

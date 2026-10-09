@@ -5,7 +5,8 @@ import uuid
 from dataclasses import dataclass
 
 from app.ai.errors import LlmUnavailableError
-from app.ai.groq_vision import extract_vision_description
+from app.ai.gemini_vision import extract_vision_description
+from app.ai.tts import schedule_message_speech
 from app.ai.tutor import generate_tutor_reply
 from app.db.models import ChatMessage, ChatSession, MessageRole, SessionDocument
 from app.lib.config import get_vision_max_pdf_pages
@@ -71,6 +72,16 @@ async def _vision_description_or_empty(image_bytes_list: list[bytes]) -> str:
     return description
 
 
+def _user_content_for_upload(filename: str, user_question: str) -> str:
+    stripped = user_question.strip()
+    upload_note = f'(File: {filename})'
+    if len(stripped) == 0:
+        labeled = f'Uploaded "{filename}"'
+        return labeled
+    combined = stripped + '\n\n' + upload_note
+    return combined
+
+
 async def process_document_upload(
     chat_session: ChatSession,
     session_id: uuid.UUID,
@@ -79,6 +90,7 @@ async def process_document_upload(
     session_document_repo: SessionDocumentRepo,
     chat_message_repo: ChatMessageRepo,
     chat_session_repo: ChatSessionRepo,
+    user_question: str = '',
 ) -> DocumentUploadResult:
     document_id = uuid.uuid4()
     storage_path = save_uploaded_file(session_id, document_id, filename, file_bytes)
@@ -114,28 +126,47 @@ async def process_document_upload(
     )
     created_document = await session_document_repo.add(document)
 
-    upload_label = f'Uploaded "{filename}"'
-    user_message = ChatMessage(chat_session_id=session_id, role=MessageRole.USER, content=upload_label)
+    history = await chat_message_repo.get_recent_for_session(session_id)
+    user_content = _user_content_for_upload(filename, user_question)
+    user_message = ChatMessage(
+        chat_session_id=session_id,
+        role=MessageRole.USER,
+        content=user_content,
+        document_id=created_document.id,
+    )
     created_user = await chat_message_repo.add(user_message)
 
     document_context = build_document_context(extracted_text, vision_description)
     if len(document_context) == 0:
         tutor_text = 'This file has no readable text.'
     else:
-        summary_history: list[ChatMessage] = []
-        summary_prompt = (
-            f'Summarize only the document context for the file "{filename}". '
-            'Explain the main topics in this upload.'
-        )
+        question_stripped = user_question.strip()
+        if len(question_stripped) > 0:
+            tutor_prompt = question_stripped
+        else:
+            tutor_prompt = (
+                f'Summarize only the document context for the file "{filename}". '
+                'Explain the main topics in this upload.'
+            )
         tutor_text = await generate_tutor_reply(
             chat_session,
-            summary_history,
-            summary_prompt,
+            history,
+            tutor_prompt,
             document_context,
         )
 
-    assistant_message = ChatMessage(chat_session_id=session_id, role=MessageRole.ASSISTANT, content=tutor_text)
+    assistant_message = ChatMessage(
+        chat_session_id=session_id,
+        role=MessageRole.ASSISTANT,
+        content=tutor_text,
+        tutor_avatar=chat_session.tutor_avatar,
+    )
     created_assistant = await chat_message_repo.add(assistant_message)
+    schedule_message_speech(
+        created_assistant.id,
+        created_assistant.content,
+        created_assistant.tutor_avatar,
+    )
 
     title_source = _title_source_for_upload(filename, extracted_text, vision_description)
     updated_session = await maybe_autotitle_session(

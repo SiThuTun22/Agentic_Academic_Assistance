@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 
+from app.ai.tts import schedule_message_speech
 from app.ai.tutor import generate_tutor_reply
 from app.db.models import ChatMessage, ChatSession, MessageRole
 from app.repositories.chat_message import ChatMessageRepo
@@ -39,8 +40,18 @@ async def send_message_exchange(
 
     tutor_text = await generate_tutor_reply(chat_session, history, content, document_context)
 
-    assistant_message = ChatMessage(chat_session_id=session_id, role=MessageRole.ASSISTANT, content=tutor_text)
+    assistant_message = ChatMessage(
+        chat_session_id=session_id,
+        role=MessageRole.ASSISTANT,
+        content=tutor_text,
+        tutor_avatar=chat_session.tutor_avatar,
+    )
     created_assistant = await chat_message_repo.add(assistant_message)
+    schedule_message_speech(
+        created_assistant.id,
+        created_assistant.content,
+        created_assistant.tutor_avatar,
+    )
 
     updated_session = await maybe_autotitle_session(
         chat_session,

@@ -56,6 +56,9 @@ export interface ChatMessageRead {
   chat_session_id: string;
   role: MessageRole;
   content: string;
+  tutor_avatar?: TutorAvatar | null;
+  document_id?: string | null;
+  document_filename?: string | null;
 }
 
 export interface ChatMessageExchangeRead {

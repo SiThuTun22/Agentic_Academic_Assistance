@@ -11,6 +11,9 @@ build/
 aaa-ui/node_modules/
 aaa-ui/dist/
 uploads/
+data/tts-audio/
+data/tts_lexicon.json
+data/tts_spell.json
 2025-12-11 8.01.13 PM.jpg
 exam.jpg
 
