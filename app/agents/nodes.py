@@ -14,7 +14,7 @@ from app.agents.router import (
 from app.agents.state import AgentState
 from app.ai.errors import LlmUnavailableError
 from app.ai.llm import invoke_llm
-from app.ai.prompts import TUTOR_PROMPT
+from app.ai.prompts import TUTOR_PROMPT, pick_delivery_style
 from app.lib.config import get_gemini_tutor_temperature
 from app.knowledge.store import (
     CATEGORY_CAMPUS,
@@ -137,13 +137,17 @@ async def tutor_node(state: AgentState) -> dict[str, str]:
     else:
         knowledge_blob = '\n\n'.join(retrieved_parts)
 
+    routes = state['routes']
+    for_faculty_profile = ROUTE_FACULTY in routes
+    delivery_style = pick_delivery_style(for_faculty_profile)
+
     payload = {
         'system_prompt': state['system_prompt'],
         'retrieved_knowledge': knowledge_blob,
         'document_context': state['document_context'],
         'message_history': state['history'],
         'user_content': state['user_content'],
-        'delivery_style': state['delivery_style'],
+        'delivery_style': delivery_style,
     }
     tutor_temperature = get_gemini_tutor_temperature()
     reply = await invoke_llm(_make_tutor_runnable, payload, tutor_temperature)

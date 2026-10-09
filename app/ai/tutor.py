@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 
 from app.agents.graph import run_tutor_graph
-from app.ai.prompts import pick_delivery_style, system_prompt_for_tone
+from app.ai.prompts import system_prompt_for_tone
 from app.db.enums import MessageRole
 from app.db.models import ChatMessage, ChatSession
 
@@ -94,13 +94,12 @@ async def generate_tutor_reply(
     )
     history_text = _format_history(history)
     document_text = _format_document_context(document_context)
-    delivery_style = pick_delivery_style()
     reply = await run_tutor_graph(
         user_content,
         history_text,
         document_text,
         system_prompt,
-        delivery_style,
+        '',
     )
     cleaned_reply = strip_leading_polite_particles(reply)
     cleaned_reply = thin_sentence_final_particles(cleaned_reply)

@@ -22,6 +22,9 @@ _FACULTY_HINTS = [
     'thwe',
     'tin moh',
     'moh lwin',
+    'zar chi',
+    'zarchi',
+    'su su hlaing',
     'ပါမောက္ခ',
     'ဆရာ',
     'ဆရာမ',
@@ -89,11 +92,6 @@ def classify_routes(user_content: str, document_context: str) -> list[str]:
     has_document = document_context != '(none)' and len(document_context.strip()) > 0
     if has_document:
         routes.append(ROUTE_PDF)
-
-    if len(routes) == 0:
-        routes.append(ROUTE_FACULTY)
-        routes.append(ROUTE_CAMPUS)
-        routes.append(ROUTE_COURSES)
 
     unique: list[str] = []
     for route in routes:
